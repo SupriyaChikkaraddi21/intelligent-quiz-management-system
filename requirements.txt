@@ -1,0 +1,6 @@
+Django
+djangorestframework
+mysqlclient
+python-dotenv
+openai
+django-cors-headers

@@ -1,0 +1,22 @@
+# Ignore virtual environment
+.venv/
+venv/
+
+
+
+# Python
+__pycache__/
+*.pyc
+
+# Django
+media/
+
+# Node
+node_modules/
+
+# Environment files
+.env
+
+# Media / uploads
+media/
+staticfiles/
