@@ -1,22 +1,39 @@
-# Ignore virtual environment
-.venv/
-venv/
-
-
-
-# Python
+# -------------------------
+# Python & Django
+# -------------------------
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# Django
-media/
+# Virtual environment
+venv/
+.venv/
 
-# Node
-node_modules/
+# SQLite (even if using MySQL — just ignore it permanently)
+db.sqlite3
+*.sqlite3
 
-# Environment files
+# Env variables
 .env
 
-# Media / uploads
+# Django static/media
 media/
 staticfiles/
+
+# VSCode settings
+.vscode/
+
+# -------------------------
+# Node / React (quiz-frontend)
+# -------------------------
+quiz-frontend/node_modules/
+quiz-frontend/dist/
+quiz-frontend/.vite/
+
+# Logs
+*.log
+
+# OS / IDE junk
+.DS_Store
+Thumbs.db
