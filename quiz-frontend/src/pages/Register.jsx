@@ -1,65 +1,114 @@
 import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../api/api";
-import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 
 export default function Register() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  // IF LOGGED IN → GO STRAIGHT TO DASHBOARD
+  if (localStorage.getItem("token")) {
+    navigate("/dashboard");
+  }
 
   async function handleRegister(e) {
     e.preventDefault();
+    setError("");
 
     try {
+      // ✅ CORRECT FIELDS MATCHING BACKEND
       const res = await api.post("/accounts/register/", {
-        username,
-        password,
+        name: name,
+        email: email,
+        password: password,
       });
 
-      alert("Registration successful!");
-      navigate("/login");
+      localStorage.setItem("token", res.data.token);
+      navigate("/dashboard");    // 🔥 GO DIRECTLY TO DASHBOARD
     } catch (err) {
-      console.error(err);
-      alert("Registration failed — username may already exist.");
+      setError("Registration failed. Try a different email.");
     }
   }
 
+  function handleGoogleSignup(cred) {
+    api
+      .post("/accounts/google-login/", {
+        credential: cred.credential,
+      })
+      .then((res) => {
+        localStorage.setItem("token", res.data.token);
+        navigate("/dashboard");
+      })
+      .catch(() => alert("Google Sign-Up failed"));
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-sm bg-white shadow-lg rounded-xl p-8">
-        <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="w-full max-w-md bg-white shadow-lg border border-gray-200 rounded-2xl p-8">
+
+        <h2 className="text-2xl font-semibold text-gray-900 text-center">
           Create Account
-        </h1>
+        </h2>
+
+        {error && (
+          <div className="text-red-600 bg-red-50 border border-red-200 p-2 rounded-md text-sm mb-4">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleRegister} className="space-y-4">
           <input
-            className="w-full p-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            type="text"
+            placeholder="Full Name"
+            className="w-full p-3 border border-gray-300 rounded-lg"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
           />
 
           <input
-            className="w-full p-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            type="email"
+            placeholder="Email Address"
+            className="w-full p-3 border border-gray-300 rounded-lg"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
           />
 
-          <button
-            className="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg font-semibold transition"
-          >
+          <input
+            type="password"
+            placeholder="Password"
+            className="w-full p-3 border border-gray-300 rounded-lg"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          <button className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition">
             Register
           </button>
         </form>
 
-        <button
-          onClick={() => navigate("/login")}
-          className="w-full mt-4 text-blue-600 hover:text-blue-800 text-sm font-medium"
-        >
-          Back to Login
-        </button>
+        <div className="my-6 text-center">OR</div>
+
+        <div className="flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSignup}
+            onError={() => alert("Google sign-up error")}
+          />
+        </div>
+
+        <p className="text-center text-gray-600 mt-6">
+          Already have an account?{" "}
+          <Link to="/login" className="text-blue-600 font-medium">
+            Login
+          </Link>
+        </p>
+
       </div>
     </div>
   );

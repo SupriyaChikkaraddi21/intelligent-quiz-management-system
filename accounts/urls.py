@@ -1,30 +1,31 @@
+# accounts/urls.py
+
 from django.urls import path
-from .views import register_view, login_view, AccountViewSet
+from .views import (
+    register_view,
+    login_view,
+    google_login_view,
+    AccountViewSet
+)
 
 account = AccountViewSet.as_view
 
 urlpatterns = [
-    # -------------------------
-    # Authentication
-    # -------------------------
-    path("register/", register_view),
-    path("login/", login_view),
 
-    # -------------------------
-    # Profile: Get + Update
-    # GET  → profile/
-    # POST → profile/
-    # -------------------------
+    # -------- AUTH --------
+    path("register/", register_view, name="register"),
+    path("login/", login_view, name="login"),
+
+    # -------- GOOGLE LOGIN --------
+    path("google-login/", google_login_view, name="google-login"),
+
+    # -------- PROFILE --------
     path("profile/", account({
         "get": "list",
-        "post": "create"
-    })),
+        "post": "create",
+    }), name="profile"),
 
-    # -------------------------
-    # Avatar Upload
-    # POST → profile/avatar/
-    # -------------------------
     path("profile/avatar/", account({
-        "post": "avatar"
-    })),
+        "post": "avatar",
+    }), name="profile-avatar"),
 ]

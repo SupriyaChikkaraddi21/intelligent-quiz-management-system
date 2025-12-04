@@ -8,7 +8,8 @@ export default function Leaderboard() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await api.get("/quizzes/leaderboard/");
+        // ✅ FIXED — correct endpoint (NO "s")
+        const res = await api.get("/quiz/leaderboard/");
         setRows(res.data || []);
       } catch (err) {
         console.error("Failed to load leaderboard:", err);
@@ -54,14 +55,14 @@ export default function Leaderboard() {
                   <td className="py-3 px-4 font-semibold">{index + 1}</td>
 
                   <td className="py-3 px-4">
-                    {row.user__username ||
-                      row.username ||
+                    {row.username ||
+                      row.user__username ||
                       row.user ||
                       "Unknown User"}
                   </td>
 
                   <td className="py-3 px-4 font-medium">
-                    {Math.round(row.avg_score || row.avg || 0)}%
+                    {Math.round(row.avg_score || 0)}%
                   </td>
                 </tr>
               ))}

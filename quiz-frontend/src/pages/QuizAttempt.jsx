@@ -16,17 +16,19 @@ export default function QuizAttempt() {
   useEffect(() => {
     const fetchAttempt = async () => {
       try {
-        const res = await api.get(`/attempts/${attemptId}/details/`);
+        const res = await api.get(`/attempt/${attemptId}/details/`);
 
         setAttempt(res.data);
         setQuestions(res.data.questions);
 
+        // build answer map
         const map = {};
         res.data.questions.forEach((q) => {
           map[q.question_id] = q.selected;
         });
-
         setAnswerMap(map);
+
+        // initialize selected
         if (res.data.questions.length > 0) {
           setSelected(map[res.data.questions[0].question_id] ?? null);
         }
@@ -41,11 +43,14 @@ export default function QuizAttempt() {
     fetchAttempt();
   }, [attemptId]);
 
+  // =============================
+  // SAVE ANSWER
+  // =============================
   const saveAnswer = async (questionId, choiceIndex) => {
     try {
-      await api.post(`/attempts/${attemptId}/answer/`, {
+      await api.post(`/attempt/${attemptId}/answer/`, {
         question_id: questionId,
-        selected: choiceIndex,
+        selected: Number(choiceIndex), // 🔥 ENSURE BACKEND GETS INTEGER
       });
 
       setAnswerMap((prev) => ({
@@ -62,6 +67,9 @@ export default function QuizAttempt() {
     saveAnswer(questions[currentIndex].question_id, index);
   };
 
+  // =============================
+  // QUESTION NAVIGATION
+  // =============================
   const goNext = () => {
     if (currentIndex < questions.length - 1) {
       const next = currentIndex + 1;
@@ -78,15 +86,21 @@ export default function QuizAttempt() {
     }
   };
 
+  // =============================
+  // FINISH QUIZ
+  // =============================
   const finishQuiz = async () => {
     try {
-      await api.post(`/attempts/${attemptId}/finish/`);
+      await api.post(`/attempt/${attemptId}/finish/`);
       navigate(`/results/${attemptId}`);
     } catch (error) {
       alert("Error finishing quiz.");
     }
   };
 
+  // =============================
+  // UI
+  // =============================
   if (loading)
     return (
       <div className="min-h-screen flex items-center justify-center text-xl">
@@ -126,7 +140,7 @@ export default function QuizAttempt() {
               className={`w-full text-left p-4 rounded-lg border transition 
                 ${
                   selected === index
-                    ? "bg-blue-100 border-blue-400"
+                    ? "bg-blue-100 border-blue-500"
                     : "bg-gray-50 hover:bg-gray-100 border-gray-300"
                 }
               `}
@@ -139,7 +153,6 @@ export default function QuizAttempt() {
         {/* Controls */}
         <div className="flex justify-between mt-8">
 
-          {/* Previous */}
           <button
             onClick={goPrev}
             disabled={currentIndex === 0}
@@ -154,7 +167,6 @@ export default function QuizAttempt() {
             Previous
           </button>
 
-          {/* Next or Finish */}
           {currentIndex < questions.length - 1 ? (
             <button
               onClick={goNext}

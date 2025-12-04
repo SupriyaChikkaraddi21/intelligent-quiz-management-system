@@ -1,6 +1,7 @@
 import React from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 
+import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -12,97 +13,111 @@ import ProgressChartPage from "./pages/ProgressChart";
 import PrivateRoute from "./components/PrivateRoute";
 import ProfilePage from "./pages/ProfilePage";
 
-import Navbar from "./components/Navbar";   // ✅ Navbar added
-import Footer from "./components/Footer";   // ✅ Footer added
-
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import Sidebar from "./components/Sidebar";
 
 export default function App() {
   const location = useLocation();
+  const token = localStorage.getItem("token");
 
-  // Hide Navbar + Footer on login/register pages
-  const hideNavbarFooter =
+  // Hide Navbar + Sidebar + Footer only on login, register, landing page
+  const hideNavigation =
     location.pathname === "/login" ||
-    location.pathname === "/register";
+    location.pathname === "/register" ||
+    location.pathname === "/";
 
   return (
     <>
-      {/* Show Navbar only when logged in */}
-      {!hideNavbarFooter && <Navbar />}
+      {/* TOP NAVBAR (hidden on landing/login/register) */}
+      {!hideNavigation && <Navbar />}
 
-      <Routes>
+      {/* AUTHENTICATED LAYOUT (Sidebar + Content) */}
+      {!hideNavigation ? (
+        <div className="flex">
 
-        {/* PUBLIC ROUTES */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+          {/* SIDEBAR (left) */}
+          <Sidebar />
 
-        {/* PROTECTED ROUTES */}
-        <Route
-          path="/"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
+          {/* MAIN CONTENT AREA (right) */}
+          <div className="flex-1 min-h-screen bg-[#F8FAFC] p-6 overflow-y-auto">
+            <Routes>
+              <Route
+                path="/dashboard"
+                element={
+                  <PrivateRoute>
+                    <Dashboard />
+                  </PrivateRoute>
+                }
+              />
 
-        <Route
-          path="/select"
-          element={
-            <PrivateRoute>
-              <QuizSelect />
-            </PrivateRoute>
-          }
-        />
+              <Route
+                path="/select"
+                element={
+                  <PrivateRoute>
+                    <QuizSelect />
+                  </PrivateRoute>
+                }
+              />
 
-        <Route
-          path="/attempt/:attemptId"
-          element={
-            <PrivateRoute>
-              <QuizAttempt />
-            </PrivateRoute>
-          }
-        />
+              <Route
+                path="/attempt/:attemptId"
+                element={
+                  <PrivateRoute>
+                    <QuizAttempt />
+                  </PrivateRoute>
+                }
+              />
 
-        <Route
-          path="/results/:attemptId"
-          element={
-            <PrivateRoute>
-              <QuizResults />
-            </PrivateRoute>
-          }
-        />
+              <Route
+                path="/results/:attemptId"
+                element={
+                  <PrivateRoute>
+                    <QuizResults />
+                  </PrivateRoute>
+                }
+              />
 
-        <Route
-          path="/leaderboard"
-          element={
-            <PrivateRoute>
-              <Leaderboard />
-            </PrivateRoute>
-          }
-        />
+              <Route
+                path="/leaderboard"
+                element={
+                  <PrivateRoute>
+                    <Leaderboard />
+                  </PrivateRoute>
+                }
+              />
 
-        <Route
-          path="/progress"
-          element={
-            <PrivateRoute>
-              <ProgressChartPage />
-            </PrivateRoute>
-          }
-        />
+              <Route
+                path="/progress"
+                element={
+                  <PrivateRoute>
+                    <ProgressChartPage />
+                  </PrivateRoute>
+                }
+              />
 
-        <Route
-          path="/profile"
-          element={
-            <PrivateRoute>
-              <ProfilePage />
-            </PrivateRoute>
-          }
-        />
+              <Route
+                path="/profile"
+                element={
+                  <PrivateRoute>
+                    <ProfilePage />
+                  </PrivateRoute>
+                }
+              />
+            </Routes>
+          </div>
+        </div>
+      ) : (
+        // PUBLIC ROUTES (landing, login, register)
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Routes>
+      )}
 
-      </Routes>
-
-      {/* Show Footer only when logged in */}
-      {!hideNavbarFooter && <Footer />}
+      {/* FOOTER (hidden on landing/login/register) */}
+      {!hideNavigation && <Footer />}
     </>
   );
 }

@@ -1,3 +1,4 @@
+// src/pages/Dashboard.jsx
 import React, { useEffect, useState } from "react";
 import api from "../api/api";
 import { useNavigate } from "react-router-dom";
@@ -9,124 +10,210 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    async function load() {
+    async function loadDashboard() {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
       try {
-        const res = await api.get("/quizzes/dashboard/");
+        // (unchanged) backend endpoint
+        const res = await api.get("/quiz/dashboard/");
         setData(res.data);
       } catch (err) {
-        console.error("Failed to load dashboard", err);
-        alert("Failed to load dashboard");
+        console.error("Dashboard error:", err);
+
+        if (err.response?.status === 401) {
+          localStorage.removeItem("token");
+          navigate("/login");
+        } else {
+          alert("Failed to load dashboard");
+        }
       } finally {
         setLoading(false);
       }
     }
-    load();
-  }, []);
 
-  if (loading)
+    loadDashboard();
+  }, [navigate]);
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-lg">
-        Loading dashboard...
+      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+        <div className="text-lg text-[#1E293B]">Loading...</div>
       </div>
     );
+  }
 
-  if (!data)
+  if (!data) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-lg">
-        No dashboard data.
+      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+        <div className="text-lg text-[#1E293B]">No dashboard data available.</div>
       </div>
     );
+  }
+
+  // helper to format date safely
+  const formatDate = (d) => {
+    if (!d) return null;
+    try {
+      const dt = new Date(d);
+      if (isNaN(dt.getTime())) return null;
+      return dt.toLocaleString();
+    } catch {
+      return null;
+    }
+  };
 
   return (
-    <div className="min-h-screen p-6 bg-gray-100">
-      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+    <div className="min-h-screen bg-[#F8FAFC] p-6">
+      {/* Page header */}
+      <div className="mb-6">
+        <h1 className="text-[28px] font-semibold text-[#1F3A5F]">Dashboard</h1>
+        <p className="mt-1 text-sm text-[#64748B]">
+          Overview — your quiz activity and performance.
+        </p>
+      </div>
 
-      {/* Stats Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-        <div className="bg-white shadow rounded-xl p-6">
-          <div className="text-gray-600">Total Quizzes</div>
-          <div className="text-3xl font-bold mt-2">{data.total_quizzes}</div>
+      {/* KPI Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+        {/* Card style kept uniform */}
+        <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
+          <div className="text-xs text-[#64748B]">Total Quizzes Attempted</div>
+          <div className="mt-3 text-3xl font-semibold text-[#1E293B]">
+            {data.total_quizzes ?? 0}
+          </div>
+          <div className="mt-2 text-xs text-[#64748B]">Number of quizzes you attempted so far</div>
         </div>
 
-        <div className="bg-white shadow rounded-xl p-6">
-          <div className="text-gray-600">Average Score</div>
-          <div className="text-3xl font-bold mt-2">
-            {Math.round(data.avg_score || 0)}%
+        <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
+          <div className="text-xs text-[#64748B]">Average Score</div>
+
+          {/* requirement: make average score black */}
+          <div className="mt-3 text-3xl font-semibold text-[#000000]">
+            {Math.round(data.average_score ?? 0)}%
+          </div>
+
+          <div className="mt-2 text-xs text-[#64748B]">Your average quiz score</div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
+          <div className="text-xs text-[#64748B]">Recent Attempts</div>
+          <div className="mt-3 text-3xl font-semibold text-[#1E293B]">
+            {Array.isArray(data.recent_scores) ? data.recent_scores.length : 0}
+          </div>
+          <div className="mt-2 text-xs text-[#64748B]">Most recent quiz attempts</div>
+        </div>
+      </div>
+
+      {/* Recent Attempts (table) */}
+      <section className="mb-8">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-lg font-semibold text-[#1F3A5F]">Recent Attempts</h2>
+            <p className="text-sm text-[#64748B]">Latest attempts and current status</p>
+          </div>
+          <div className="text-sm text-[#64748B]">Showing latest {Math.min((data.recent_scores || []).length, 5)}</div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+          <div className="w-full overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-100">
+              <thead className="bg-white">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#64748B] uppercase tracking-wider">
+                    Attempt
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#64748B] uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-[#64748B] uppercase tracking-wider">
+                    Score
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-[#64748B] uppercase tracking-wider">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody className="bg-white divide-y divide-gray-50">
+                {(!data.recent_scores || data.recent_scores.length === 0) ? (
+                  <tr>
+                    <td colSpan="4" className="px-6 py-8 text-center text-sm text-[#64748B]">
+                      No recent attempts available.
+                    </td>
+                  </tr>
+                ) : (
+                  data.recent_scores.slice(0, 20).map((r, i) => {
+                    const dateStr = formatDate(r.started_at);
+                    const displayDate = dateStr ?? "Not available";
+                    const scoreDisplay = (r.score !== null && r.score !== undefined) ? `${r.score}%` : "—";
+                    const completed = !!r.completed;
+                    const statusLabel = dateStr ? (completed ? "Completed" : "In progress") : "Pending";
+
+                    return (
+                      <tr key={i} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-[#1E293B]">{`Attempt ${i + 1}`}</div>
+                          <div className="text-xs text-[#64748B]">{r.quiz_title ?? "Quiz attempt"}</div>
+                        </td>
+
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {dateStr ? (
+                            <div className="text-sm text-[#1E293B]">{displayDate}</div>
+                          ) : (
+                            <div className="text-sm text-[#64748B]">Not available</div>
+                          )}
+                        </td>
+
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <div className="text-sm font-medium text-[#1E293B]">{scoreDisplay}</div>
+                        </td>
+
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          {statusLabel === "Completed" ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-[#ECFDF5] text-[#065F46]">
+                              Completed
+                            </span>
+                          ) : statusLabel === "In progress" ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-[#FEF3C7] text-[#92400E]">
+                              In progress
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-[#F1F5F9] text-[#64748B]">
+                              Pending
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Recent Scores */}
-      <div className="mb-10">
-        <h2 className="text-xl font-bold mb-3">Recent Scores</h2>
-
-        <div className="bg-white shadow rounded-xl p-5">
-          {(data.recent_scores || []).length === 0 ? (
-            <p className="text-gray-500">No recent results</p>
-          ) : (
-            <ul className="list-disc ml-5 space-y-2">
-              {data.recent_scores.map((r, i) => (
-                <li key={i}>
-                  {r.started_at
-                    ? new Date(r.started_at).toLocaleString()
-                    : "Unknown"}{" "}
-                  — <strong>{r.score}%</strong>
-                </li>
-              ))}
-            </ul>
-          )}
+      {/* Performance Chart */}
+      <section>
+        <div className="mb-3">
+          <h2 className="text-lg font-semibold text-[#1F3A5F]">Performance</h2>
+          <p className="text-sm text-[#64748B]">Score trend over time</p>
         </div>
-      </div>
 
-      {/* Navigation Buttons */}
-      <div className="flex flex-wrap gap-3 mb-10">
-        <button
-          onClick={() => navigate("/select")}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          Create New Quiz
-        </button>
-
-        <button
-          onClick={() => navigate("/leaderboard")}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-        >
-          Leaderboard
-        </button>
-
-        <button
-          onClick={() => navigate("/progress")}
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-        >
-          Progress
-        </button>
-
-        <button
-          onClick={() => navigate("/profile")}
-          className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-        >
-          Profile
-        </button>
-
-        <button
-          onClick={() => {
-            localStorage.removeItem("token");
-            navigate("/login");
-          }}
-          className="px-4 py-2 bg-red-100 border border-red-400 text-red-700 rounded-lg hover:bg-red-200"
-        >
-          Logout
-        </button>
-      </div>
-
-      {/* Score Progress Chart */}
-      <h2 className="text-xl font-bold mb-3">Your Score Progress</h2>
-
-      <div className="bg-white shadow rounded-xl p-4">
-        <div className="w-full h-[350px]">
-          <ProgressChartPage />
+        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+          <div className="w-full h-[360px] px-2 py-3"> 
+            {/* px/padding ensures chart has breathing room and titles won't overlap edges */}
+            <ProgressChartPage />
+          </div>
+          <div className="mt-3 text-sm text-[#64748B]">
+            The chart displays your score history (older → newer). Hover a point to see the exact attempt date and score.
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
