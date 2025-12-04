@@ -10,7 +10,6 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // IF LOGGED IN → GO STRAIGHT TO DASHBOARD
   if (localStorage.getItem("token")) {
     navigate("/dashboard");
   }
@@ -20,15 +19,14 @@ export default function Register() {
     setError("");
 
     try {
-      // ✅ CORRECT FIELDS MATCHING BACKEND
       const res = await api.post("/accounts/register/", {
-        name: name,
-        email: email,
-        password: password,
+        name,
+        email,
+        password,
       });
 
       localStorage.setItem("token", res.data.token);
-      navigate("/dashboard");    // 🔥 GO DIRECTLY TO DASHBOARD
+      navigate("/dashboard");
     } catch (err) {
       setError("Registration failed. Try a different email.");
     }
@@ -49,7 +47,6 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white shadow-lg border border-gray-200 rounded-2xl p-8">
-
         <h2 className="text-2xl font-semibold text-gray-900 text-center">
           Create Account
         </h2>
@@ -108,7 +105,6 @@ export default function Register() {
             Login
           </Link>
         </p>
-
       </div>
     </div>
   );
