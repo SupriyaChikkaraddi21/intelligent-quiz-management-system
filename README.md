@@ -49,7 +49,7 @@ Recharts
 📦 Installation & Setup
 🔧 Backend Setup (Django)
 1. Clone the repo
-git clone https://github.com/SupriyaChikkaraddi21/quizgen.git
+git clone https://github.com/SupriyaChikkaraddi21/intelligent-quiz-management-system.git
 cd quizgen
 
 2. Create Virtual Environment
