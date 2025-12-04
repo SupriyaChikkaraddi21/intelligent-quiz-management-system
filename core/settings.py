@@ -2,25 +2,16 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load environment variables from .env (dev only)
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# --------------------------
-# SECURITY (from environment)
-# --------------------------
-# Use environment variable DJANGO_SECRET_KEY locally and in production
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-dev-placeholder")
-
-# DEBUG should be explicitly set via env (default True for local dev)
-DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() in ("1", "true", "yes")
-
+# SECURITY
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-dev-placeholder")
+DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() in ("1", "true")
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
-# --------------------------
 # INSTALLED APPS
-# --------------------------
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -28,6 +19,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",
 
     # Third-party
     "rest_framework",
@@ -39,11 +31,17 @@ INSTALLED_APPS = [
     "accounts",
 ]
 
-# --------------------------
+SITE_ID = 1
+
+# AUTH BACKENDS (NO ALLAUTH)
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+]
+
 # MIDDLEWARE
-# --------------------------
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
+
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -57,6 +55,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = "core.urls"
 
+# TEMPLATES
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -74,9 +73,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "core.wsgi.application"
 
-# --------------------------
-# DATABASE (MySQL) - from env
-# --------------------------
+# DATABASE (MySQL)
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
@@ -86,27 +83,22 @@ DATABASES = {
         "HOST": os.getenv("MYSQL_HOST", "127.0.0.1"),
         "PORT": os.getenv("MYSQL_PORT", "3306"),
         "OPTIONS": {
-            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'"
         },
     }
 }
 
-# --------------------------
-# PASSWORD VALIDATION
-# --------------------------
-AUTH_PASSWORD_VALIDATORS = []
+# REST FRAMEWORK
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.AllowAny",
+    ],
+}
 
-# --------------------------
-# INTERNATIONALIZATION
-# --------------------------
-LANGUAGE_CODE = "en-us"
-TIME_ZONE = os.getenv("DJANGO_TIME_ZONE", "Asia/Kolkata")
-USE_I18N = True
-USE_TZ = True
-
-# --------------------------
 # STATIC & MEDIA
-# --------------------------
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
@@ -115,24 +107,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# --------------------------
-# REST FRAMEWORK
-# --------------------------
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
-    ],
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated",
-    ],
-}
+# OPENAI KEY
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# --------------------------
-# OPENAI - used by generate_quiz
-# --------------------------
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
-
-# ------------
-# Helpful dev flag
-# ------------
-# When DEBUG=False and you are deploying, make sure to set DJANGO_DEBUG to "False"
+# GOOGLE LOGIN KEYS (FOR YOUR CUSTOM AUTH)
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")

@@ -45,26 +45,23 @@ export default function QuizSelect() {
     }
 
     try {
-      const gen = await api.post("/quizzes/generate/", {
+      // Generate quiz
+      const gen = await api.post("/quiz/generate/", {
         category: selectedCategory,
         subcategory: selectedSubcategory || null,
         difficulty,
         count,
       });
 
-      if (!gen.data.quiz_id) {
-        throw new Error("Quiz ID missing");
-      }
-
       const quizId = gen.data.quiz_id;
 
-      const start = await api.post(`/quizzes/${quizId}/start/`);
+      // Start attempt
+      const start = await api.post(`/quiz/${quizId}/start/`);
 
-      if (!start.data.attempt_id && !start.data.attempt?.id) {
-        throw new Error("Attempt ID missing");
-      }
-
-      const attemptId = start.data.attempt_id || start.data.attempt.id;
+      const attemptId =
+        start.data.attempt_id ||
+        start.data.attempt?.id ||
+        start.data.attempt?.attempt_id;
 
       navigate(`/attempt/${attemptId}`);
     } catch (err) {
@@ -83,11 +80,8 @@ export default function QuizSelect() {
   return (
     <div className="min-h-screen p-6 bg-gray-100 flex justify-center">
       <div className="w-full max-w-xl bg-white shadow-lg rounded-xl p-8">
-        <h1 className="text-2xl font-bold mb-6 text-center">
-          Create a Quiz
-        </h1>
+        <h1 className="text-2xl font-bold mb-6 text-center">Create a Quiz</h1>
 
-        {/* CATEGORY */}
         <div className="mb-5">
           <label className="font-semibold">Select Category</label>
           <select
@@ -107,11 +101,8 @@ export default function QuizSelect() {
           </select>
         </div>
 
-        {/* SUBCATEGORY */}
         <div className="mb-5">
-          <label className="font-semibold">
-            Select Subcategory (optional)
-          </label>
+          <label className="font-semibold">Select Subcategory (optional)</label>
           <select
             value={selectedSubcategory}
             disabled={!selectedCategory}
@@ -127,7 +118,6 @@ export default function QuizSelect() {
           </select>
         </div>
 
-        {/* DIFFICULTY */}
         <div className="mb-5">
           <label className="font-semibold">Difficulty</label>
           <select
@@ -141,24 +131,18 @@ export default function QuizSelect() {
           </select>
         </div>
 
-        {/* COUNT */}
         <div className="mb-5">
-          <label className="font-semibold">
-            How Many Questions?
-          </label>
+          <label className="font-semibold">How Many Questions?</label>
           <input
             type="number"
             min={1}
             max={50}
             value={count}
-            onChange={(e) =>
-              setCount(Math.max(1, Number(e.target.value) || 1))
-            }
+            onChange={(e) => setCount(Math.max(1, Number(e.target.value) || 1))}
             className="w-full mt-2 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
-        {/* BUTTON */}
         <button
           onClick={generateQuiz}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-semibold transition"

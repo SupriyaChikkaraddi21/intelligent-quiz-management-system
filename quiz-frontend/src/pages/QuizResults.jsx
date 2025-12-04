@@ -12,7 +12,7 @@ export default function QuizResults() {
   useEffect(() => {
     async function loadResult() {
       try {
-        const res = await api.get(`/attempts/${attemptId}/details/`);
+        const res = await api.get(`/attempt/${attemptId}/details/`);
         setResult(res.data);
         setLoading(false);
       } catch (err) {
@@ -39,57 +39,63 @@ export default function QuizResults() {
     );
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 flex justify-center">
-      <div className="w-full max-w-3xl bg-white shadow-lg rounded-xl p-8">
+    <div className="min-h-screen bg-[#F8FAFC] p-6 flex justify-center">
+      <div className="w-full max-w-3xl bg-white shadow-md rounded-2xl p-8">
 
         {/* Title */}
-        <h1 className="text-3xl font-bold text-center mb-4">Quiz Results</h1>
+        <h1 className="text-3xl font-bold text-center text-[#1F3A5F] mb-2">
+          Quiz Results
+        </h1>
 
         {/* Quiz Title */}
-        <h2 className="text-xl text-center font-semibold text-gray-700 mb-6">
+        <h2 className="text-lg text-center text-[#64748B] mb-6">
           {result.quiz_title}
         </h2>
 
         {/* Score */}
         <div className="text-center mb-10">
-          <p className="text-2xl font-bold">
+          <p className="text-xl font-semibold text-[#1E293B]">
             Your Score:{" "}
-            <span className="text-blue-600">{result.score}%</span>
+            <span className="text-[#1F3A5F] font-bold">{result.score}%</span>
           </p>
         </div>
 
-        {/* Review Section */}
-        <h3 className="text-xl font-bold mb-4">Questions Review</h3>
+        {/* Review Header */}
+        <h3 className="text-xl font-bold text-[#1E293B] mb-4">
+          Questions Review
+        </h3>
 
+        {/* Questions */}
         <div className="space-y-6">
-          {result.questions.map((q, index) => (
+          {result.questions.map((q, i) => (
             <div
               key={q.question_id}
-              className="p-5 rounded-lg border bg-gray-50"
+              className="p-5 bg-white rounded-xl border border-gray-200 shadow-sm"
             >
-              <h4 className="font-semibold mb-3">
-                Q{index + 1}. {q.question_text}
+              <h4 className="font-semibold text-[#1E293B] mb-4">
+                Q{i + 1}. {q.question_text}
               </h4>
 
-              {/* Choices */}
-              <div className="space-y-2">
-                {q.choices.map((choice, i) => {
-                  const isCorrect = i === q.correct_choice;
-                  const isSelected = i === q.selected;
+              <div className="space-y-3">
+                {q.choices.map((choice, index) => {
+                  const isCorrect = index === q.correct_choice;
+                  const isSelected = index === q.selected;
+
+                  let styling = "bg-white border-gray-300";
+
+                  if (isCorrect) {
+                    styling = "bg-green-100 border-green-500";
+                  } else if (isSelected && !isCorrect) {
+                    styling = "bg-red-100 border-red-500";
+                  }
 
                   return (
-                    <p
-                      key={i}
-                      className={`p-3 rounded-lg border ${
-                        isCorrect
-                          ? "bg-green-100 border-green-400"
-                          : isSelected
-                            ? "bg-red-100 border-red-400"
-                            : "bg-white border-gray-300"
-                      }`}
+                    <div
+                      key={index}
+                      className={`p-3 rounded-lg border ${styling} transition`}
                     >
                       {choice}
-                    </p>
+                    </div>
                   );
                 })}
               </div>
@@ -100,8 +106,8 @@ export default function QuizResults() {
         {/* Back Button */}
         <div className="text-center mt-10">
           <button
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/dashboard")}
+            className="px-6 py-3 bg-[#1F3A5F] text-white rounded-lg hover:bg-[#162b46] transition font-semibold"
           >
             Back to Dashboard
           </button>

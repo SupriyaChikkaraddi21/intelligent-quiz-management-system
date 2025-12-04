@@ -17,18 +17,18 @@ export default function ProgressChartPage() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await api.get("/quizzes/progress/");
+        // ✅ FIX — correct endpoint (no "s")
+        const res = await api.get("/quiz/progress/");
 
-        // 🔥 FIX: Ensure data is ALWAYS an array
         if (Array.isArray(res.data)) {
           setData(res.data);
         } else {
-          console.warn("Progress API returned non-array:", res.data);
-          setData([]); // fallback
+          console.warn("Progress API returned unexpected:", res.data);
+          setData([]);
         }
       } catch (err) {
         console.error("Failed to load progress:", err);
-        setData([]); // fallback to safe value
+        setData([]);
       } finally {
         setLoading(false);
       }
@@ -44,7 +44,6 @@ export default function ProgressChartPage() {
       </div>
     );
 
-  // 🔥 FIX: If array is empty, show message NOT crash UI
   if (!data.length)
     return (
       <div className="p-4 text-center text-gray-600">
@@ -63,7 +62,12 @@ export default function ProgressChartPage() {
             <XAxis dataKey="date" />
             <YAxis domain={[0, 100]} />
             <Tooltip />
-            <Line type="monotone" dataKey="score" stroke="#4a90e2" strokeWidth={3} />
+            <Line
+              type="monotone"
+              dataKey="score"
+              stroke="#4a90e2"
+              strokeWidth={3}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
