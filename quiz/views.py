@@ -52,7 +52,6 @@ class QuizViewSet(viewsets.ViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    # ---------------------- DASHBOARD ------------------------
     @action(detail=False, methods=["get"])
     def dashboard(self, request):
         try:
@@ -83,7 +82,6 @@ class QuizViewSet(viewsets.ViewSet):
             logger.exception("DASHBOARD ERROR: %s", e)
             return Response({"detail": "Dashboard error"}, status=500)
 
-    # ---------------------- PROGRESS ------------------------
     @action(detail=False, methods=["get"])
     def progress(self, request):
         try:
@@ -101,7 +99,6 @@ class QuizViewSet(viewsets.ViewSet):
             logger.exception("PROGRESS ERROR: %s", e)
             return Response([], status=200)
 
-    # ---------------------- LEADERBOARD ------------------------
     @action(detail=False, methods=["get"])
     def leaderboard(self, request):
         try:
@@ -124,7 +121,6 @@ class QuizViewSet(viewsets.ViewSet):
             logger.exception("LEADERBOARD ERROR: %s", e)
             return Response([], status=200)
 
-    # ---------------------- GENERATE QUIZ ------------------------
     @action(detail=False, methods=["post"])
     def generate(self, request):
         try:
@@ -133,13 +129,11 @@ class QuizViewSet(viewsets.ViewSet):
             difficulty = request.data.get("difficulty", "Medium")
             count = int(request.data.get("count", 5))
 
-            # Validate category
             try:
                 category = Category.objects.get(id=category_id)
             except Category.DoesNotExist:
                 return Response({"error": "Invalid category"}, status=400)
 
-            # Validate optional subcategory
             subcat = None
             if subcategory_id:
                 try:
@@ -149,7 +143,6 @@ class QuizViewSet(viewsets.ViewSet):
 
             topic = subcat.name if subcat else category.name
 
-            # Generate questions via AI
             ai_questions = generate_questions(topic, difficulty, count)
             if not ai_questions:
                 return Response({"error": "AI generation failed"}, status=500)
@@ -182,7 +175,6 @@ class QuizViewSet(viewsets.ViewSet):
             logger.exception("GENERATE ERROR: %s", e)
             return Response({"error": "Internal server error"}, status=500)
 
-    # ---------------------- START ATTEMPT ------------------------
     @action(detail=True, methods=["post"])
     def start(self, request, pk=None):
         try:
@@ -196,7 +188,6 @@ class QuizViewSet(viewsets.ViewSet):
             started_at=timezone.now(),
         )
 
-        # Create question attempts
         for qid in quiz.question_templates:
             try:
                 qt = QuestionTemplate.objects.get(id=qid)
@@ -219,7 +210,6 @@ class AttemptViewSet(viewsets.ViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    # ---------------------- DETAILS ------------------------
     @action(detail=True, methods=["get"])
     def details(self, request, pk=None):
         try:
@@ -235,6 +225,7 @@ class AttemptViewSet(viewsets.ViewSet):
                 "choices": qa.question.choices,
                 "selected": qa.selected_choice,
                 "correct_choice": qa.question.correct_choice,
+                "explanation": qa.question.explanation or ""   # 🔥 ADDED EXPLANATION HERE
             })
 
         return Response({
@@ -245,11 +236,10 @@ class AttemptViewSet(viewsets.ViewSet):
             "completed": attempt.completed,
         })
 
-    # ---------------------- SAVE ANSWER ------------------------
     @action(detail=True, methods=["post"])
     def answer(self, request, pk=None):
         qid = request.data.get("question_id")
-        selected = int(request.data.get("selected"))   # 🔥 FIXED
+        selected = int(request.data.get("selected"))
 
         try:
             qa = QuestionAttempt.objects.get(
@@ -260,12 +250,11 @@ class AttemptViewSet(viewsets.ViewSet):
             return Response({"error": "Invalid question"}, status=404)
 
         qa.selected_choice = selected
-        qa.is_correct = (selected == qa.question.correct_choice)  # 🔥 fixed comparison
+        qa.is_correct = (selected == qa.question.correct_choice)
         qa.save()
 
         return Response({"saved": True})
 
-    # ---------------------- FINISH ATTEMPT ------------------------
     @action(detail=True, methods=["post"])
     def finish(self, request, pk=None):
         try:
