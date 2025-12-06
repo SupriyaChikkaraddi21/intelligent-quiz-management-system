@@ -1,3 +1,5 @@
+# core/settings.py
+
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -41,7 +43,6 @@ AUTHENTICATION_BACKENDS = [
 # MIDDLEWARE
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
-
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -113,3 +114,10 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # GOOGLE LOGIN KEYS (FOR YOUR CUSTOM AUTH)
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+
+# -------------------------
+# Important behaviour fixes
+# -------------------------
+# Automatically append a trailing slash to URLs when missing.
+# This prevents 404s caused by frontend forgetting the trailing slash.
+APPEND_SLASH = True

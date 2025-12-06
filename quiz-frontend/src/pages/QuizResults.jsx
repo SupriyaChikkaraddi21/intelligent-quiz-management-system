@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import api from "../api/api";
 
 export default function QuizResults() {
   const { attemptId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Detect timeout from URL (?timeout=1)
+  const isTimeout = new URLSearchParams(location.search).get("timeout") === "1";
 
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
@@ -42,17 +46,24 @@ export default function QuizResults() {
     <div className="min-h-screen bg-[#F8FAFC] p-6 flex justify-center">
       <div className="w-full max-w-3xl bg-white shadow-md rounded-2xl p-8">
 
-        {/* Title */}
+        {/* MAIN TITLE */}
         <h1 className="text-3xl font-bold text-center text-[#1F3A5F] mb-2">
           Quiz Results
         </h1>
 
-        {/* Quiz Title */}
+        {/* TIMEOUT BANNER */}
+        {isTimeout && (
+          <div className="text-center mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg font-semibold">
+            ⏳ Your quiz was submitted automatically because time ran out.
+          </div>
+        )}
+
+        {/* QUIZ TITLE */}
         <h2 className="text-lg text-center text-[#64748B] mb-6">
           {result.quiz_title}
         </h2>
 
-        {/* Score */}
+        {/* SCORE */}
         <div className="text-center mb-10">
           <p className="text-xl font-semibold text-[#1E293B]">
             Your Score:{" "}
@@ -60,50 +71,81 @@ export default function QuizResults() {
           </p>
         </div>
 
-        {/* Review Header */}
+        {/* REVIEW HEADER */}
         <h3 className="text-xl font-bold text-[#1E293B] mb-4">
           Questions Review
         </h3>
 
-        {/* Questions */}
+        {/* QUESTIONS */}
         <div className="space-y-6">
-          {result.questions.map((q, i) => (
-            <div
-              key={q.question_id}
-              className="p-5 bg-white rounded-xl border border-gray-200 shadow-sm"
-            >
-              <h4 className="font-semibold text-[#1E293B] mb-4">
-                Q{i + 1}. {q.question_text}
-              </h4>
+          {result.questions.map((q, i) => {
+            const isCorrect = q.selected === q.correct_choice;
+            const isUnanswered = q.selected === -1; // ⭐ UNANSWERED DETECTION
 
-              <div className="space-y-3">
-                {q.choices.map((choice, index) => {
-                  const isCorrect = index === q.correct_choice;
-                  const isSelected = index === q.selected;
+            return (
+              <div
+                key={q.question_id}
+                className="p-5 bg-white rounded-xl border border-gray-200 shadow-sm"
+              >
+                {/* QUESTION TEXT */}
+                <h4 className="font-semibold text-[#1E293B] mb-4">
+                  Q{i + 1}. {q.question_text}
+                </h4>
 
-                  let styling = "bg-white border-gray-300";
+                {/* OPTIONS */}
+                <div className="space-y-3">
+                  {q.choices.map((choice, index) => {
+                    const isCorrectOption = index === q.correct_choice;
+                    const isSelected = index === q.selected;
 
-                  if (isCorrect) {
-                    styling = "bg-green-100 border-green-500";
-                  } else if (isSelected && !isCorrect) {
-                    styling = "bg-red-100 border-red-500";
-                  }
+                    let styling = "bg-white border-gray-300";
 
-                  return (
-                    <div
-                      key={index}
-                      className={`p-3 rounded-lg border ${styling} transition`}
-                    >
-                      {choice}
-                    </div>
-                  );
-                })}
+                    if (isCorrectOption) {
+                      styling = "bg-green-100 border-green-500";
+                    }
+
+                    if (isSelected && !isCorrectOption && !isUnanswered) {
+                      styling = "bg-red-100 border-red-500";
+                    }
+
+                    // ⭐ If timeout unanswered -> mark all options neutral
+                    if (isUnanswered && isTimeout) {
+                      styling = "bg-red-50 border-red-400";
+                    }
+
+                    return (
+                      <div
+                        key={index}
+                        className={`p-3 rounded-lg border ${styling}`}
+                      >
+                        {choice}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* ⭐ UNANSWERED LABEL */}
+                {isUnanswered && isTimeout && (
+                  <div className="mt-3 text-red-600 font-semibold text-sm">
+                    ⚠ Not answered (Time Up)
+                  </div>
+                )}
+
+                {/* WRONG ATTEMPT EXPLANATION (only if attempted & wrong) */}
+                {!isUnanswered && !isCorrect && q.explanation && (
+                  <div className="mt-4 p-4 bg-yellow-50 border border-yellow-300 rounded-lg">
+                    <h5 className="font-semibold text-yellow-800">Explanation</h5>
+                    <p className="text-sm text-gray-700 mt-1 leading-relaxed">
+                      {q.explanation}
+                    </p>
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* Back Button */}
+        {/* BACK BUTTON */}
         <div className="text-center mt-10">
           <button
             onClick={() => navigate("/dashboard")}
