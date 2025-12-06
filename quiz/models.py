@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
 import uuid
-from django.db.models import JSONField   # ✅ Use Django's JSONField (Important!)
+from django.db.models import JSONField
 
 
 class Category(models.Model):
@@ -39,10 +39,10 @@ class QuestionTemplate(models.Model):
     source = models.CharField(max_length=50, default="ai")
 
     question_text = models.TextField()
-    choices = JSONField(default=list)               # ✅ Proper JSON list
+    choices = JSONField(default=list)
     correct_choice = models.IntegerField()
     explanation = models.TextField(blank=True)
-    references = JSONField(default=list)            # ✅ Proper JSON list
+    references = JSONField(default=list)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -57,8 +57,11 @@ class Quiz(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     subcategory = models.ForeignKey(Subcategory, null=True, blank=True, on_delete=models.SET_NULL)
 
-    question_templates = JSONField(default=list)    # ✅ Must be REAL LIST, not string
+    question_templates = JSONField(default=list)
     difficulty = models.CharField(max_length=20, default="medium")
+
+    # ⭐ Dynamic timer stored in seconds
+    time_limit = models.IntegerField(default=300)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

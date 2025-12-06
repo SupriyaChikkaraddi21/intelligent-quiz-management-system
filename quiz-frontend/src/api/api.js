@@ -1,41 +1,41 @@
 // src/api/api.js
-
 import axios from "axios";
 
 // Base API instance
 const api = axios.create({
-  baseURL: "http://localhost:8000/api",
+  baseURL: "http://localhost:8000/api/",   // <- trailing slash is intentional & required
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: false,
 });
 
 // Automatically attach token to all requests
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-
-  if (token) {
-    config.headers.Authorization = `Token ${token}`;
+  try {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Token ${token}`;
+    }
+  } catch (e) {
+    // swallow localStorage errors in restricted envs
   }
-
   return config;
 });
 
 // Global response handler
 api.interceptors.response.use(
   (response) => response,
-
   (error) => {
-    // If token expired or invalid → logout user
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem("token");
-
-      // Redirect to login only if not already on login page
+    if (error && error.response && error.response.status === 401) {
+      // token invalid/expired → force logout
+      try {
+        localStorage.removeItem("token");
+      } catch (e) {}
       if (window.location.pathname !== "/login") {
         window.location.href = "/login";
       }
     }
-
     return Promise.reject(error);
   }
 );

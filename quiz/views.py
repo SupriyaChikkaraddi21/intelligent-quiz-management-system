@@ -1,6 +1,6 @@
 # quiz/views.py
 
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -45,13 +45,19 @@ class SubcategoryViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 # ======================================================
-# QUIZ VIEWSET (DASHBOARD / GENERATE / PROGRESS)
+# QUIZ VIEWSET (Using GenericViewSet FIXES /dashboard/)
 # ======================================================
 
-class QuizViewSet(viewsets.ViewSet):
+class QuizViewSet(
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
+    queryset = Quiz.objects.all()  # REQUIRED for GenericViewSet
+
+    # ---------------------- DASHBOARD ----------------------
     @action(detail=False, methods=["get"])
     def dashboard(self, request):
         try:
@@ -82,45 +88,7 @@ class QuizViewSet(viewsets.ViewSet):
             logger.exception("DASHBOARD ERROR: %s", e)
             return Response({"detail": "Dashboard error"}, status=500)
 
-    @action(detail=False, methods=["get"])
-    def progress(self, request):
-        try:
-            attempts = QuizAttempt.objects.filter(
-                user=request.user
-            ).order_by("started_at")
-
-            data = [
-                {"date": a.started_at.isoformat(), "score": a.score}
-                for a in attempts
-            ]
-
-            return Response(data)
-        except Exception as e:
-            logger.exception("PROGRESS ERROR: %s", e)
-            return Response([], status=200)
-
-    @action(detail=False, methods=["get"])
-    def leaderboard(self, request):
-        try:
-            users = (
-                QuizAttempt.objects.values("user__username")
-                .annotate(avg_score=models.Avg("score"))
-                .order_by("-avg_score")[:10]
-            )
-
-            result = [
-                {
-                    "username": u["user__username"],
-                    "avg_score": round(u["avg_score"] or 0, 2)
-                }
-                for u in users
-            ]
-
-            return Response(result)
-        except Exception as e:
-            logger.exception("LEADERBOARD ERROR: %s", e)
-            return Response([], status=200)
-
+    # ---------------------- GENERATE QUIZ ----------------------
     @action(detail=False, methods=["post"])
     def generate(self, request):
         try:
@@ -129,17 +97,8 @@ class QuizViewSet(viewsets.ViewSet):
             difficulty = request.data.get("difficulty", "Medium")
             count = int(request.data.get("count", 5))
 
-            try:
-                category = Category.objects.get(id=category_id)
-            except Category.DoesNotExist:
-                return Response({"error": "Invalid category"}, status=400)
-
-            subcat = None
-            if subcategory_id:
-                try:
-                    subcat = Subcategory.objects.get(id=subcategory_id)
-                except Subcategory.DoesNotExist:
-                    return Response({"error": "Invalid subcategory"}, status=400)
+            category = Category.objects.get(id=category_id)
+            subcat = Subcategory.objects.get(id=subcategory_id) if subcategory_id else None
 
             topic = subcat.name if subcat else category.name
 
@@ -161,12 +120,17 @@ class QuizViewSet(viewsets.ViewSet):
                 )
                 template_ids.append(str(qt.id))
 
+            # ⭐ TIME PER QUESTION = 60 seconds
+            TIME_PER_Q = 60
+            time_limit = count * TIME_PER_Q
+
             quiz = Quiz.objects.create(
                 title=f"{topic} Quiz",
                 category=category,
                 subcategory=subcat,
                 difficulty=difficulty,
-                question_templates=template_ids
+                question_templates=template_ids,
+                time_limit=time_limit
             )
 
             return Response({"quiz_id": str(quiz.id)}, status=201)
@@ -175,6 +139,7 @@ class QuizViewSet(viewsets.ViewSet):
             logger.exception("GENERATE ERROR: %s", e)
             return Response({"error": "Internal server error"}, status=500)
 
+    # ---------------------- START ATTEMPT ----------------------
     @action(detail=True, methods=["post"])
     def start(self, request, pk=None):
         try:
@@ -203,13 +168,19 @@ class QuizViewSet(viewsets.ViewSet):
 
 
 # ======================================================
-# ATTEMPT VIEWSET (ANSWER / FINISH / DETAILS)
+# ATTEMPT VIEWSET (Also fixed with GenericViewSet)
 # ======================================================
 
-class AttemptViewSet(viewsets.ViewSet):
+class AttemptViewSet(
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet
+):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
+    queryset = QuizAttempt.objects.all()  # REQUIRED
+
+    # ---------------------- DETAILS ----------------------
     @action(detail=True, methods=["get"])
     def details(self, request, pk=None):
         try:
@@ -225,7 +196,7 @@ class AttemptViewSet(viewsets.ViewSet):
                 "choices": qa.question.choices,
                 "selected": qa.selected_choice,
                 "correct_choice": qa.question.correct_choice,
-                "explanation": qa.question.explanation or ""   # 🔥 ADDED EXPLANATION HERE
+                "explanation": qa.question.explanation or "",
             })
 
         return Response({
@@ -234,8 +205,11 @@ class AttemptViewSet(viewsets.ViewSet):
             "questions": questions,
             "score": attempt.score,
             "completed": attempt.completed,
+            "time_limit": attempt.quiz.time_limit,
+            "started_at": attempt.started_at.isoformat(),
         })
 
+    # ---------------------- SAVE ANSWER ----------------------
     @action(detail=True, methods=["post"])
     def answer(self, request, pk=None):
         qid = request.data.get("question_id")
@@ -255,6 +229,7 @@ class AttemptViewSet(viewsets.ViewSet):
 
         return Response({"saved": True})
 
+    # ---------------------- FINISH ----------------------
     @action(detail=True, methods=["post"])
     def finish(self, request, pk=None):
         try:
