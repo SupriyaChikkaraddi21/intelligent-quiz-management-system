@@ -1,6 +1,6 @@
 # quiz/views.py
 
-from rest_framework import viewsets, status, mixins
+from rest_framework import viewsets, mixins, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -9,6 +9,7 @@ from rest_framework.authentication import TokenAuthentication
 from django.db import models
 from django.utils import timezone
 import logging
+import json
 
 from .models import (
     Category,
@@ -16,16 +17,18 @@ from .models import (
     QuestionTemplate,
     Quiz,
     QuizAttempt,
-    QuestionAttempt
+    QuestionAttempt,
 )
 
 from .serializers import (
     CategorySerializer,
     SubcategorySerializer,
     QuizAttemptSerializer,
+    CategoryGroupSerializer,
 )
 
 from .generate_quiz import generate_questions
+from categories.models import CategoryGroup
 
 logger = logging.getLogger(__name__)
 
@@ -45,17 +48,14 @@ class SubcategoryViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 # ======================================================
-# QUIZ VIEWSET (Using GenericViewSet FIXES /dashboard/)
+# QUIZ VIEWSET
 # ======================================================
 
-class QuizViewSet(
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet
-):
+class QuizViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    queryset = Quiz.objects.all()  # REQUIRED for GenericViewSet
+    queryset = Quiz.objects.all()
 
     # ---------------------- DASHBOARD ----------------------
     @action(detail=False, methods=["get"])
@@ -102,7 +102,12 @@ class QuizViewSet(
 
             topic = subcat.name if subcat else category.name
 
-            ai_questions = generate_questions(topic, difficulty, count)
+            # Force Indian context for ambiguous topics
+            origin_hint = ""
+            if topic.lower() in ["national", "indian gk", "current affairs", "general knowledge"]:
+                origin_hint = "Generate only India-specific questions. Do NOT generate US-related questions."
+
+            ai_questions = generate_questions(topic, difficulty, count, origin_hint=origin_hint)
             if not ai_questions:
                 return Response({"error": "AI generation failed"}, status=500)
 
@@ -120,17 +125,14 @@ class QuizViewSet(
                 )
                 template_ids.append(str(qt.id))
 
-            # ⭐ TIME PER QUESTION = 60 seconds
             TIME_PER_Q = 60
-            time_limit = count * TIME_PER_Q
-
             quiz = Quiz.objects.create(
                 title=f"{topic} Quiz",
                 category=category,
                 subcategory=subcat,
                 difficulty=difficulty,
                 question_templates=template_ids,
-                time_limit=time_limit
+                time_limit=count * TIME_PER_Q,
             )
 
             return Response({"quiz_id": str(quiz.id)}, status=201)
@@ -160,6 +162,7 @@ class QuizViewSet(
                     quiz_attempt=attempt,
                     question=qt,
                     selected_choice=-1,
+                    is_correct=False,
                 )
             except QuestionTemplate.DoesNotExist:
                 continue
@@ -168,17 +171,14 @@ class QuizViewSet(
 
 
 # ======================================================
-# ATTEMPT VIEWSET (Also fixed with GenericViewSet)
+# ATTEMPT VIEWSET
 # ======================================================
 
-class AttemptViewSet(
-    mixins.RetrieveModelMixin,
-    viewsets.GenericViewSet
-):
+class AttemptViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    queryset = QuizAttempt.objects.all()  # REQUIRED
+    queryset = QuizAttempt.objects.all()
 
     # ---------------------- DETAILS ----------------------
     @action(detail=True, methods=["get"])
@@ -209,42 +209,80 @@ class AttemptViewSet(
             "started_at": attempt.started_at.isoformat(),
         })
 
-    # ---------------------- SAVE ANSWER ----------------------
+    # ---------------------- SAVE ANSWER (ROBUST & FINAL) ----------------------
     @action(detail=True, methods=["post"])
     def answer(self, request, pk=None):
+
         qid = request.data.get("question_id")
-        selected = int(request.data.get("selected"))
 
         try:
-            qa = QuestionAttempt.objects.get(
-                quiz_attempt_id=pk,
-                question_id=qid
-            )
+            selected = int(request.data.get("selected"))
+        except:
+            return Response({"error": "Invalid selected value"}, status=400)
+
+        try:
+            qa = QuestionAttempt.objects.get(quiz_attempt_id=pk, question_id=qid)
         except QuestionAttempt.DoesNotExist:
             return Response({"error": "Invalid question"}, status=404)
 
-        qa.selected_choice = selected
-        qa.is_correct = (selected == qa.question.correct_choice)
-        qa.save()
+        # Parse choices
+        choices = qa.question.choices
+        if isinstance(choices, str):
+            try:
+                choices = json.loads(choices)
+            except:
+                choices = []
 
-        return Response({"saved": True})
+        if not isinstance(choices, list):
+            choices = list(choices)
+
+        # Parse correct index
+        raw_correct = qa.question.correct_choice
+        try:
+            correct_index = int(raw_correct)
+        except:
+            correct_index = choices.index(raw_correct) if raw_correct in choices else -1
+
+        is_correct = False
+
+        # 0-based
+        if 0 <= selected < len(choices):
+            is_correct = (selected == correct_index)
+
+        # 1-based fallback
+        elif 1 <= selected <= len(choices):
+            is_correct = ((selected - 1) == correct_index)
+
+        qa.selected_choice = selected
+        qa.is_correct = is_correct
+        qa.save(update_fields=["selected_choice", "is_correct"])
+
+        return Response({"saved": True, "is_correct": is_correct})
 
     # ---------------------- FINISH ----------------------
     @action(detail=True, methods=["post"])
     def finish(self, request, pk=None):
         try:
             attempt = QuizAttempt.objects.get(id=pk, user=request.user)
-        except QuizAttempt.DoesNotExist:
+        except:
             return Response({"error": "Invalid attempt"}, status=404)
 
         total = attempt.question_attempts.count()
         correct = attempt.question_attempts.filter(is_correct=True).count()
-
-        score = round((correct / total) * 100, 2) if total > 0 else 0
+        score = round((correct / total) * 100, 2)
 
         attempt.score = score
         attempt.completed = True
         attempt.finished_at = timezone.now()
-        attempt.save()
+        attempt.save(update_fields=["score", "completed", "finished_at"])
 
         return Response({"score": score})
+
+
+# ======================================================
+# CATEGORY GROUP API
+# ======================================================
+
+class CategoryGroupListView(generics.ListAPIView):
+    queryset = CategoryGroup.objects.prefetch_related("categories").all()
+    serializer_class = CategoryGroupSerializer

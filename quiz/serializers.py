@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from .models import Category, Subcategory, Quiz, QuestionTemplate, QuizAttempt, QuestionAttempt
 
+# ============================================================
+# EXISTING SERIALIZERS (UNCHANGED)
+# ============================================================
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,7 +28,13 @@ class QuizSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Quiz
-        fields = ["id", "category", "subcategory", "difficulty", "questions"]
+        fields = [
+            "id",
+            "category",
+            "subcategory",
+            "difficulty",
+            "questions",
+        ]
 
 
 class QuestionAttemptSerializer(serializers.ModelSerializer):
@@ -40,3 +49,25 @@ class QuizAttemptSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuizAttempt
         fields = ["id", "quiz", "score", "questions"]
+
+
+# ============================================================
+# NEW FEATURE: CATEGORY GROUPING SERIALIZERS
+# ============================================================
+
+# Updated import path (correct)
+from categories.models import CategoryGroup, Category as GroupCategory
+
+
+class GroupCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GroupCategory
+        fields = ("id", "name", "slug", "order")
+
+
+class CategoryGroupSerializer(serializers.ModelSerializer):
+    categories = GroupCategorySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = CategoryGroup
+        fields = ("id", "name", "order", "categories")

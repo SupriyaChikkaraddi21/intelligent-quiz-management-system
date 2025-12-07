@@ -31,6 +31,8 @@ INSTALLED_APPS = [
     # Local apps
     "quiz",
     "accounts",
+    "categories.apps.CategoriesConfig",
+ 
 ]
 
 SITE_ID = 1
