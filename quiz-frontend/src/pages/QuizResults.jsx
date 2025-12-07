@@ -7,8 +7,9 @@ export default function QuizResults() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Detect timeout from URL (?timeout=1)
-  const isTimeout = new URLSearchParams(location.search).get("timeout") === "1";
+  // Check timeout flag
+  const isTimeout =
+    new URLSearchParams(location.search).get("timeout") === "1";
 
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
@@ -51,10 +52,10 @@ export default function QuizResults() {
           Quiz Results
         </h1>
 
-        {/* TIMEOUT BANNER */}
+        {/* TIMEOUT WARNING */}
         {isTimeout && (
           <div className="text-center mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg font-semibold">
-            ⏳ Your quiz was submitted automatically because time ran out.
+            ⏳ Time is up! Your quiz was auto-submitted.
           </div>
         )}
 
@@ -76,23 +77,22 @@ export default function QuizResults() {
           Questions Review
         </h3>
 
-        {/* QUESTIONS */}
         <div className="space-y-6">
           {result.questions.map((q, i) => {
             const isCorrect = q.selected === q.correct_choice;
-            const isUnanswered = q.selected === -1; // ⭐ UNANSWERED DETECTION
+            const isUnanswered = q.selected === -1;
 
             return (
               <div
                 key={q.question_id}
                 className="p-5 bg-white rounded-xl border border-gray-200 shadow-sm"
               >
-                {/* QUESTION TEXT */}
+                {/* QUESTION */}
                 <h4 className="font-semibold text-[#1E293B] mb-4">
                   Q{i + 1}. {q.question_text}
                 </h4>
 
-                {/* OPTIONS */}
+                {/* ANSWER OPTIONS */}
                 <div className="space-y-3">
                   {q.choices.map((choice, index) => {
                     const isCorrectOption = index === q.correct_choice;
@@ -100,17 +100,19 @@ export default function QuizResults() {
 
                     let styling = "bg-white border-gray-300";
 
+                    // Correct answer (always green)
                     if (isCorrectOption) {
                       styling = "bg-green-100 border-green-500";
                     }
 
+                    // Wrong selected answer (red)
                     if (isSelected && !isCorrectOption && !isUnanswered) {
                       styling = "bg-red-100 border-red-500";
                     }
 
-                    // ⭐ If timeout unanswered -> mark all options neutral
-                    if (isUnanswered && isTimeout) {
-                      styling = "bg-red-50 border-red-400";
+                    // Timeout unanswered -> highlight all lightly
+                    if (isTimeout && isUnanswered) {
+                      styling = "bg-red-50 border-red-300";
                     }
 
                     return (
@@ -124,17 +126,19 @@ export default function QuizResults() {
                   })}
                 </div>
 
-                {/* ⭐ UNANSWERED LABEL */}
-                {isUnanswered && isTimeout && (
+                {/* UNANSWERED LABEL */}
+                {isUnanswered && (
                   <div className="mt-3 text-red-600 font-semibold text-sm">
-                    ⚠ Not answered (Time Up)
+                    ⚠ Not answered
                   </div>
                 )}
 
-                {/* WRONG ATTEMPT EXPLANATION (only if attempted & wrong) */}
-                {!isUnanswered && !isCorrect && q.explanation && (
+                {/* EXPLANATION WHEN WRONG */}
+                {!isCorrect && !isUnanswered && q.explanation && (
                   <div className="mt-4 p-4 bg-yellow-50 border border-yellow-300 rounded-lg">
-                    <h5 className="font-semibold text-yellow-800">Explanation</h5>
+                    <h5 className="font-semibold text-yellow-800">
+                      Explanation
+                    </h5>
                     <p className="text-sm text-gray-700 mt-1 leading-relaxed">
                       {q.explanation}
                     </p>
