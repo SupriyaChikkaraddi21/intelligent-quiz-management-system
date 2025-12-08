@@ -45,23 +45,16 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white shadow-lg border border-gray-200 rounded-2xl p-8">
-        <h2 className="text-2xl font-semibold text-gray-900 text-center">
-          Create Account
-        </h2>
+    <div className="register-page">
+      <div className="register-card">
+        <h2>Create Account</h2>
 
-        {error && (
-          <div className="text-red-600 bg-red-50 border border-red-200 p-2 rounded-md text-sm mb-4">
-            {error}
-          </div>
-        )}
+        {error && <div className="error-box">{error}</div>}
 
-        <form onSubmit={handleRegister} className="space-y-4">
+        <form onSubmit={handleRegister}>
           <input
             type="text"
             placeholder="Full Name"
-            className="w-full p-3 border border-gray-300 rounded-lg"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -70,7 +63,6 @@ export default function Register() {
           <input
             type="email"
             placeholder="Email Address"
-            className="w-full p-3 border border-gray-300 rounded-lg"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -79,31 +71,26 @@ export default function Register() {
           <input
             type="password"
             placeholder="Password"
-            className="w-full p-3 border border-gray-300 rounded-lg"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
 
-          <button className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition">
-            Register
-          </button>
+          <button type="submit">Register</button>
         </form>
 
-        <div className="my-6 text-center">OR</div>
+        <div className="divider">OR</div>
 
-        <div className="flex justify-center">
+        <div className="google-wrap">
           <GoogleLogin
             onSuccess={handleGoogleSignup}
             onError={() => alert("Google sign-up error")}
           />
         </div>
 
-        <p className="text-center text-gray-600 mt-6">
+        <p className="login-text">
           Already have an account?{" "}
-          <Link to="/login" className="text-blue-600 font-medium">
-            Login
-          </Link>
+          <Link to="/login">Login</Link>
         </p>
       </div>
     </div>

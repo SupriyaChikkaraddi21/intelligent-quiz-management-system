@@ -13,16 +13,11 @@ export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // ⭐ UPDATED MENU with Analytics added
   const menu = [
     { name: "Dashboard", path: "/dashboard", icon: <HomeIcon className="w-6" /> },
     { name: "Create Quiz", path: "/select", icon: <ClipboardDocumentListIcon className="w-6" /> },
     { name: "Leaderboard", path: "/leaderboard", icon: <ChartBarIcon className="w-6" /> },
     { name: "Progress", path: "/progress", icon: <ChartBarIcon className="w-6" /> },
-
-    // ⭐ NEW ANALYTICS PAGE
-    { name: "Analytics", path: "/analytics", icon: <ChartBarIcon className="w-6" /> },
-
     { name: "Profile", path: "/profile", icon: <UserIcon className="w-6" /> },
   ];
 
@@ -56,7 +51,7 @@ export default function Sidebar() {
               to={item.path}
               className={`flex items-center gap-4 px-4 py-3 mx-2 rounded-lg
                 transition-all cursor-pointer
-                ${active ? "bg-[#2bb0a6] text-black" : "hover:bg-white/20"}
+                ${active ? "bg-[#2BB0A6] text-black" : "hover:bg-white/20"}
               `}
             >
               {item.icon}
