@@ -4,6 +4,10 @@ import uuid
 from django.db.models import JSONField
 
 
+# ============================================================
+# CATEGORY MODELS (unchanged)
+# ============================================================
+
 class Category(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True)
@@ -31,10 +35,15 @@ class Subcategory(models.Model):
         return f"{self.category.name} - {self.name}"
 
 
+# ============================================================
+# QUESTION TEMPLATE
+# ============================================================
+
 class QuestionTemplate(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     subcategory = models.ForeignKey(Subcategory, null=True, blank=True, on_delete=models.SET_NULL)
+
     difficulty = models.CharField(max_length=20, default="medium")
     source = models.CharField(max_length=50, default="ai")
 
@@ -50,6 +59,10 @@ class QuestionTemplate(models.Model):
         return self.question_text[:50]
 
 
+# ============================================================
+# QUIZ MODEL
+# ============================================================
+
 class Quiz(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=255)
@@ -60,7 +73,6 @@ class Quiz(models.Model):
     question_templates = JSONField(default=list)
     difficulty = models.CharField(max_length=20, default="medium")
 
-    # ⭐ Dynamic timer stored in seconds
     time_limit = models.IntegerField(default=300)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -68,6 +80,16 @@ class Quiz(models.Model):
     def __str__(self):
         return self.title
 
+
+# ============================================================
+# QUIZ ATTEMPT — ADAPTIVE ENGINE STORAGE
+# ============================================================
+
+DIFFICULTY_CHOICES = (
+    ("easy", "Easy"),
+    ("medium", "Medium"),
+    ("hard", "Hard"),
+)
 
 class QuizAttempt(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -79,16 +101,41 @@ class QuizAttempt(models.Model):
     finished_at = models.DateTimeField(null=True, blank=True)
     started_at = models.DateTimeField(auto_now_add=True)
 
+    # ⭐ NEW FIELD (safe)
+    current_difficulty = models.CharField(
+        max_length=10,
+        choices=DIFFICULTY_CHOICES,
+        default="easy",
+        help_text="Adaptive difficulty for the active quiz attempt"
+    )
+
     def __str__(self):
         return f"{self.user} - {self.quiz.title}"
 
 
+# ============================================================
+# QUESTION ATTEMPT — STORE DIFFICULTY USED
+# ============================================================
+
 class QuestionAttempt(models.Model):
-    quiz_attempt = models.ForeignKey(QuizAttempt, on_delete=models.CASCADE, related_name="question_attempts")
+    quiz_attempt = models.ForeignKey(
+        QuizAttempt,
+        on_delete=models.CASCADE,
+        related_name="question_attempts"
+    )
     question = models.ForeignKey(QuestionTemplate, on_delete=models.CASCADE)
 
     selected_choice = models.IntegerField()
     is_correct = models.BooleanField(default=False)
+
+    # ⭐ NEW FIELD (safe)
+    difficulty = models.CharField(
+        max_length=10,
+        choices=DIFFICULTY_CHOICES,
+        null=True,
+        blank=True,
+        help_text="Difficulty level of question when user attempted it"
+    )
 
     def __str__(self):
         return f"{self.quiz_attempt} - {self.question.id}"
