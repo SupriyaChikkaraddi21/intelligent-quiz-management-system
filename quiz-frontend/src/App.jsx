@@ -10,8 +10,10 @@ import QuizAttempt from "./pages/QuizAttempt";
 import QuizResults from "./pages/QuizResults";
 import Leaderboard from "./pages/Leaderboard";
 import ProgressChartPage from "./pages/ProgressChart";
-import PrivateRoute from "./components/PrivateRoute";
 import ProfilePage from "./pages/ProfilePage";
+import AnalyticsDashboard from "./pages/AnalyticsDashboard"; // ⭐ NEW
+
+import PrivateRoute from "./components/PrivateRoute";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -92,6 +94,15 @@ export default function App() {
                 element={
                   <PrivateRoute>
                     <ProgressChartPage />
+                  </PrivateRoute>
+                }
+              />
+
+              <Route
+                path="/analytics"
+                element={
+                  <PrivateRoute>
+                    <AnalyticsDashboard />   {/* ⭐ NEW ANALYTICS PAGE */}
                   </PrivateRoute>
                 }
               />

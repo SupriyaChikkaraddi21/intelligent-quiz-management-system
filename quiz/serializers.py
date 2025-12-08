@@ -1,8 +1,15 @@
 from rest_framework import serializers
-from .models import Category, Subcategory, Quiz, QuestionTemplate, QuizAttempt, QuestionAttempt
+from .models import (
+    Category,
+    Subcategory,
+    Quiz,
+    QuestionTemplate,
+    QuizAttempt,
+    QuestionAttempt,
+)
 
 # ============================================================
-# EXISTING SERIALIZERS (UNCHANGED)
+# CATEGORY SERIALIZERS
 # ============================================================
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -17,11 +24,26 @@ class SubcategorySerializer(serializers.ModelSerializer):
         fields = ["id", "name", "category"]
 
 
+# ============================================================
+# QUESTION TEMPLATE SERIALIZER
+# ============================================================
+
 class QuestionTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuestionTemplate
-        fields = ["id", "question", "choices", "correct_index", "explanation"]
+        fields = [
+            "id",
+            "question_text",
+            "choices",
+            "correct_choice",
+            "explanation",
+            "difficulty",
+        ]
 
+
+# ============================================================
+# QUIZ SERIALIZER
+# ============================================================
 
 class QuizSerializer(serializers.ModelSerializer):
     questions = QuestionTemplateSerializer(many=True, read_only=True)
@@ -37,27 +59,56 @@ class QuizSerializer(serializers.ModelSerializer):
         ]
 
 
+# ============================================================
+# QUESTION ATTEMPT SERIALIZER (UPDATED)
+# ============================================================
+
 class QuestionAttemptSerializer(serializers.ModelSerializer):
+    question_text = serializers.CharField(source='question.question_text')
+    choices = serializers.JSONField(source='question.choices')
+    correct_choice = serializers.IntegerField(source='question.correct_choice')
+
     class Meta:
         model = QuestionAttempt
-        fields = ["id", "question", "selected_index", "is_correct"]
+        fields = [
+            "id",
+            "question",
+            "question_text",
+            "choices",
+            "correct_choice",
+            "selected_choice",
+            "is_correct",
+            "difficulty",   # ⭐ NEW FIELD
+        ]
 
+
+# ============================================================
+# QUIZ ATTEMPT SERIALIZER (UPDATED)
+# ============================================================
 
 class QuizAttemptSerializer(serializers.ModelSerializer):
-    questions = QuestionAttemptSerializer(many=True, read_only=True)
+    questions = QuestionAttemptSerializer(
+        many=True,
+        read_only=True,
+        source="question_attempts"
+    )
 
     class Meta:
         model = QuizAttempt
-        fields = ["id", "quiz", "score", "questions"]
+        fields = [
+            "id",
+            "quiz",
+            "score",
+            "current_difficulty",   # ⭐ NEW FIELD
+            "questions",
+        ]
 
 
 # ============================================================
-# NEW FEATURE: CATEGORY GROUPING SERIALIZERS
+# CATEGORY GROUP SERIALIZERS (UNCHANGED)
 # ============================================================
 
-# Updated import path (correct)
 from categories.models import CategoryGroup, Category as GroupCategory
-
 
 class GroupCategorySerializer(serializers.ModelSerializer):
     class Meta:
