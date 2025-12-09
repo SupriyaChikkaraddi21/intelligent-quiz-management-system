@@ -1,43 +1,880 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap");
+
+:root {
+  --sky-blue: #7DD3FC;   /* Soft light sky blue */
+  --navy-blue: #0F2A44; /* Deep navy */
+  --soft-blue: #EAF6FF; /* Light background */
+  --yellow: #FDBA2D;    /* Soft golden yellow */
+  --dark: #0F172A;      
+  --muted: #475569;    
+  --white: #ffffff;
+}
+
+/* ✅ GLOBAL */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background: var(--soft-blue);
+  color: var(--dark);
+}
+
+.landing-wrapper {
+  width: 100%;
+}
+/* ✅ NAVBAR (STICKY) */
+.navbar {
+  position: sticky;
+  top: 0;
+  background: white;
+  border-bottom: 1px solid #E2E8F0;
+  z-index: 1000;
+}
+
+/* ✅ NAV CONTAINER */
+.nav-container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+}
+
+/* ✅ LOGO (LEFT ONLY) */
+.nav-logo {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--navy-blue);
+}
+
+/* ✅ LINKS (RIGHT SIDE GROUP) */
+.nav-links {
+  display: flex;
+  gap: 1.2rem;
+  margin-left: auto;   /* ✅ THIS pushes everything to the right */
+}
+
+.nav-links a {
+  text-decoration: none;
+  position:relative;
+  color: var(--muted);
+  font-weight: 500;
+  padding-bottom:4px;
+  transition:color 0,25s ease;
+}
+/* ✅ UNDERLINE EFFECT */
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--sky-blue), var(--yellow));
+  transition: width 0.3s ease;
+}
+
+
+/* ✅ LOGIN + REGISTER BUTTONS (RIGHT SIDE) */
+.nav-buttons {
+  display: flex;
+  gap: 0.8rem;
+  margin-left: 1.5rem; /* small space after links */
+}
+/* ✅ ON HOVER */
+.nav-links a:hover {
+  color: var(--navy-blue);
+}
+
+.nav-links a:hover::after {
+  width: 100%;
+}
+
+/* ✅ BUTTONS */
+.btn-primary {
+  background: var(--sky-blue);
+  border: none;
+  padding: 0.7rem 1.6rem;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--dark);
+}
+
+.btn-primary.large {
+  background: var(--yellow);
+  padding: 1rem 2.5rem;
+}
+
+.btn-secondary {
+  border: 2px solid #E2E8F0;
+  background: transparent;
+  padding: 0.7rem 1.6rem;
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--navy-blue);
+  font-weight: 600;
+}
+
+
+/* ✅ HERO */
+.hero-section {
+  max-width: 1200px;
+  margin: auto;
+  padding: 5rem 1.5rem;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+}
+
+.hero-title {
+  font-size: 2.8rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--navy-blue), var(--sky-blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-subtitle {
+  margin-top: 1rem;
+  color: var(--muted);
+  max-width: 520px;
+}
+
+.hero-image {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+}
+.hero-buttons{
+  display:flex;
+  gap: 1.2rem; 
+  margin-top: 1.5rem;
+  
+
+}
+.section-title{
+  text-align: center;
+  font-size:1.55rem;
+  font-weight: 800;
+}
+/* ✅ WHY SECTION */
+.problem-section {
+  max-width: 1100px;
+  margin: auto;
+  padding: 4.5rem 1.5rem;
+}
+
+.problem-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.problem-card {
+  background: white;
   padding: 2rem;
+  border-radius: 14px;
+  border: 1px solid #E2E8F0;
+}
+
+.problem-card.highlight {
+  border-color: var(--sky-blue);
+  background: #F0F9FF;
+}
+
+/* ✅ FEATURE SECTION */
+.feature-section {
+  padding: 4.5rem 1.5rem;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  transition: filter 300ms;
+/* ✅ NEW WRAPPER TO ALIGN CARDS IN A ROW */
+.feature-cards {
+  margin-top: 2.5rem;
+  display: flex;                 /* ✅ THIS FIXES IT */
+  gap: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;               /* ✅ mobile responsive */
 }
 
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+.feature-card {
+  max-width: 520px;
+  width: 100%;
+  height: 300px;
+  background: white;
+  padding: 2rem;
+  border-radius: 14px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
 }
 
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.feature-card img {
+  max-width: 100%;
+  margin-bottom: 1rem;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+
+/* ✅ CAPABILITIES */
+.capabilities-section {
+  padding: 4.5rem 1.5rem;
+  background: white;
+}
+
+.capabilities-grid {
+  max-width: 1000px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.capability-card {
+  background: #F8FAFC;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ✅ HORIZONTAL WORKFLOW SECTION */
+.workflow-horizontal-section {
+  padding: 4.5rem 1.5rem;
+  background: var(--soft-blue);
+  text-align: center;
+}
+
+.workflow-horizontal-section .section-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--navy-blue);
+}
+
+.workflow-horizontal-section .section-subtitle {
+  margin-top: 0.5rem;
+  color: var(--muted);
+}
+
+/* ✅ ROW OF STEPS */
+.workflow-horizontal {
+  max-width: 1100px;
+  margin: 3rem auto 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+}
+
+/* ✅ EACH STEP CARD */
+.workflow-horizontal-card {
+  flex: 1;
+  min-width: 150px;
+  background: white;
+  padding: 1.6rem 1.2rem;
+  border-radius: 14px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  text-align: center;
+  transition: all 0.25s ease;
+  cursor: default;
+}
+
+/* ✅ STEP NUMBER */
+.workflow-step-number {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--yellow);
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 0.6rem;
+}
+
+/* ✅ STEP TEXT */
+.workflow-horizontal-card p {
+  font-weight: 600;
+  color: var(--dark);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* ✅ HOVER EFFECT (SOFT & CLEAN) */
+.workflow-horizontal-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(125, 211, 252, 0.35);
+  border-color: var(--sky-blue);
+}
+
+/* ✅ MOBILE FRIENDLY */
+@media (max-width: 900px) {
+  .workflow-horizontal {
+    justify-content: center;
   }
-  to {
-    transform: rotate(360deg);
+
+  .workflow-horizontal-card {
+    max-width: 260px;
+    flex: none;
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+
+/* ✅ TRUST */
+.trust-section {
+  padding: 4.5rem 1.5rem;
+  max-width: 900px;
+  margin: auto;
+}
+
+.trust-list li {
+  margin-bottom: 0.8rem;
+}
+
+/* ✅ OUTCOME */
+.outcome-section {
+  max-width: 900px;
+  margin: auto;
+  padding: 4.5rem 1.5rem;
+}
+
+/* ✅ FINAL CTA */
+.final-cta {
+  background: linear-gradient(135deg, var(--navy-blue), var(--sky-blue));
+  color: white;
+  text-align: center;
+  padding: 4.5rem 1.5rem;
+}
+
+/* ✅ FOOTER */
+.footer {
+  background: white;
+  border-top: 1px solid #E2E8F0;
+  padding: 3rem 1.5rem;
+}
+
+.footer-grid {
+  max-width: 1100px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+.footer-bottom {
+  text-align: center;
+  margin-top: 2rem;
+  color: var(--muted);
+}
+
+/* ✅ RESPONSIVE */
+@media (max-width: 900px) {
+  .hero-grid,
+  .problem-grid,
+  .capabilities-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .workflow-item.left,
+  .workflow-item.right {
+    padding: 0;
+    justify-content: center;
+  }
+
+  .workflow-circle {
+    left: 50%;
+    transform: translate(-50%);
   }
 }
 
-.card {
-  padding: 2em;
+
+
+
+/* ✅ REGISTER PAGE BACKGROUND */
+.register-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--soft-blue), #f8fbff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
 }
 
-.read-the-docs {
-  color: #888;
+/* ✅ REGISTER CARD */
+.register-page .register-card {
+  width: 100%;
+  max-width: 420px;
+  background: white;
+  padding: 2.4rem;
+  border-radius: 20px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 20px 50px rgba(15, 42, 68, 0.15);
+}
+
+/* ✅ TITLE */
+.register-page h2 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  text-align: center;
+  color: var(--navy-blue);
+  margin-bottom: 1.5rem;
+}
+
+/* ✅ ERROR MESSAGE */
+.register-page .error-box {
+  color: #B91C1C;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+/* ✅ INPUT FIELDS */
+.register-page input {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  border: 1.5px solid #CBD5E1;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.register-page input:focus {
+  border-color: var(--sky-blue);
+  box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.3);
+}
+
+/* ✅ FORM SPACING */
+.register-page form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ✅ REGISTER BUTTON */
+.register-page button {
+  margin-top: 0.4rem;
+  background: linear-gradient(135deg, var(--sky-blue), var(--yellow));
+  padding: 0.9rem;
+  border-radius: 12px;
+  border: none;
+  font-weight: 800;
+  color: var(--dark);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.register-page button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(125, 211, 252, 0.5);
+}
+
+/* ✅ OR DIVIDER */
+.register-page .divider {
+  margin: 1.6rem 0;
+  text-align: center;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+/* ✅ GOOGLE BUTTON WRAPPER */
+.register-page .google-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+/* ✅ LOGIN TEXT */
+.register-page .login-text {
+  margin-top: 1.8rem;
+  font-size: 0.9rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+.register-page .login-text a {
+  color: var(--sky-blue);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.register-page .login-text a:hover {
+  text-decoration: underline;
+}
+
+/* ✅ MOBILE OPTIMIZATION */
+@media (max-width: 480px) {
+  .register-page .register-card {
+    padding: 2rem 1.6rem;
+  }
+}
+
+
+/* ✅ LOGIN PAGE */
+.login-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--soft-blue), #f8fbff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.login-wrapper {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* ✅ LOGO */
+.login-logo {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--navy-blue);
+  margin-bottom: 1.2rem;
+}
+
+/* ✅ LOGIN CARD */
+.login-card {
+  background: white;
+  padding: 2.4rem;
+  border-radius: 20px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 20px 50px rgba(15, 42, 68, 0.15);
+}
+
+.login-card h2 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  text-align: center;
+  color: var(--navy-blue);
+  margin-bottom: 1.5rem;
+}
+
+/* ✅ FORM */
+.login-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.login-card label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--dark);
+}
+
+.login-card input {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  border: 1.5px solid #CBD5E1;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.login-card input:focus {
+  border-color: var(--sky-blue);
+  box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.3);
+}
+
+/* ✅ LOGIN BUTTON */
+.login-card button {
+  margin-top: 0.6rem;
+  background: linear-gradient(135deg, var(--sky-blue), var(--yellow));
+  padding: 0.9rem;
+  border-radius: 12px;
+  border: none;
+  font-weight: 800;
+  color: var(--dark);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.login-card button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(125, 211, 252, 0.5);
+}
+
+/* ✅ DIVIDER */
+.login-card .divider {
+  margin: 1.6rem 0;
+  text-align: center;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+/* ✅ GOOGLE */
+.login-card .google-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+/* ✅ LOGIN FOOTER TEXT */
+.login-card .login-text {
+  margin-top: 1.8rem;
+  font-size: 0.9rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+.login-card .login-text a {
+  color: var(--sky-blue);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.login-card .login-text a:hover {
+  text-decoration: underline;
+}
+
+
+
+/* ✅ DASHBOARD PAGE */
+.dashboard-page {
+  min-height: 100vh;
+  background: var(--soft-blue);
+  padding: 2rem 1.5rem;
+}
+
+/* ✅ LOADING STATE */
+.dashboard-loading {
+  min-height: 100vh;
+  background: var(--soft-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--navy-blue);
+}
+
+/* ✅ HEADER */
+.dashboard-header {
+  margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--navy-blue);
+}
+
+.dashboard-header p {
+  margin-top: 0.3rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+/* ✅ KPI ROW */
+.dashboard-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.4rem;
+  margin-bottom: 2.8rem;
+}
+
+.kpi-card {
+  background: var(--white);
+  border-radius: 14px;
+  border: 1px solid #E2E8F0;
+  padding: 1.6rem;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-4px);
+}
+
+.kpi-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.kpi-value {
+  margin-top: 0.8rem;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--dark);
+}
+
+.kpi-value.black {
+  color: #000000;
+}
+
+.kpi-sub {
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* ✅ DASHBOARD SECTIONS */
+.dashboard-section {
+  margin-bottom: 3rem;
+}
+
+.section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.section-header h2 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--navy-blue);
+}
+
+.section-header p {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.section-meta {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* ✅ TABLE */
+.table-wrap {
+  background: var(--white);
+  border-radius: 14px;
+  border: 1px solid #E2E8F0;
+  overflow-x: auto;
+}
+
+.dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dashboard-table thead th {
+  background: var(--white);
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.9rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.dashboard-table tbody td {
+  padding: 1rem;
+  font-size: 0.9rem;
+  color: var(--dark);
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.dashboard-table tbody tr:hover {
+  background: #F8FAFC;
+}
+
+.dashboard-table .right {
+  text-align: right;
+}
+
+.empty-row {
+  text-align: center;
+  padding: 2rem;
+  color: var(--muted);
+}
+
+/* ✅ ATTEMPT NAME */
+.attempt-title {
+  font-weight: 700;
+  color: var(--dark);
+}
+
+.attempt-sub {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.2rem;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* ✅ STATUS BADGES */
+.status {
+  display: inline-flex;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.status.completed {
+  background: #ECFDF5;
+  color: #065F46;
+}
+
+.status.progress {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.status.pending {
+  background: #F1F5F9;
+  color: var(--muted);
+}
+
+/* ✅ CHART */
+.chart-card {
+  background: var(--white);
+  border-radius: 14px;
+  border: 1px solid #E2E8F0;
+  padding: 1.6rem;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
+}
+
+.chart-wrap {
+  width: 100%;
+  height: 360px;
+  padding: 0.6rem;
+}
+
+.chart-note {
+  margin-top: 0.8rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* ✅ RESPONSIVE */
+@media (max-width: 900px) {
+  .dashboard-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+
+  .dashboard-page {
+    padding: 1.4rem 1rem;
+  }
 }
