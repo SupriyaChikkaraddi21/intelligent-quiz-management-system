@@ -27,11 +27,13 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "corsheaders",
+    "django_extensions",
 
     # Local apps
+    "categories.apps.CategoriesConfig",
     "quiz",
     "accounts",
-    "categories.apps.CategoriesConfig",
+    
  
 ]
 
@@ -111,7 +113,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # OPENAI KEY
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# print("OPENAI_API_KEY:", os.getenv("OPENAI_API_KEY"))
+print("GROQ_API_KEY:", os.getenv("GROQ_API_KEY"))
+
+
 
 # GOOGLE LOGIN KEYS (FOR YOUR CUSTOM AUTH)
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")

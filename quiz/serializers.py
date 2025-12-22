@@ -122,3 +122,11 @@ class CategoryGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = CategoryGroup
         fields = ("id", "name", "order", "categories")
+
+
+from rest_framework import serializers
+
+class LeaderboardSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    username = serializers.CharField()
+    avg_score = serializers.FloatField()

@@ -2,37 +2,52 @@ from django.db import models
 from django.utils.text import slugify
 import uuid
 from django.db.models import JSONField
+from categories.models import Category
+
 
 
 # ============================================================
 # CATEGORY MODELS (unchanged)
 # ============================================================
 
-class Category(models.Model):
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, blank=True)
+# class Category(models.Model):
+#     name = models.CharField(max_length=255)
+#     slug = models.SlugField(unique=True, blank=True)
 
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
+#     def save(self, *args, **kwargs):
+#         if not self.slug:
+#             self.slug = slugify(self.name)
+#         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return self.name
+#     def __str__(self):
+#         return self.name
 
 
+# class Subcategory(models.Model):
+#     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="subcategories")
+#     name = models.CharField(max_length=255)
+#     slug = models.SlugField(unique=True, blank=True)
+
+#     def save(self, *args, **kwargs):
+#         if not self.slug:
+#             self.slug = slugify(f"{self.category.name}-{self.name}")
+#         super().save(*args, **kwargs)
+
+#     def __str__(self):
+#         return f"{self.category.name} - {self.name}"
 class Subcategory(models.Model):
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="subcategories")
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        related_name="subcategories"
+    )
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(f"{self.category.name}-{self.name}")
+            self.slug = slugify(f"{self.category.slug}-{self.name}")
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.category.name} - {self.name}"
 
 
 # ============================================================

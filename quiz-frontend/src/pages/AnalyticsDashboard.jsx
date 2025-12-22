@@ -25,7 +25,7 @@ export default function AnalyticsDashboard() {
     let cancelled = false;
     async function load() {
       try {
-        const res = await api.get("/user/analytics/");
+        const res = await api.get("/quiz/user/analytics/");
         if (cancelled) return;
         setData(res.data);
       } catch (err) {

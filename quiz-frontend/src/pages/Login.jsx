@@ -7,59 +7,54 @@ import {
   EyeSlashIcon,
 } from "@heroicons/react/24/outline";
 
-export default function Register() {
+export default function Login() {
   const navigate = useNavigate();
 
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
-  // 🔒 If already logged in, go to dashboard
   useEffect(() => {
     if (localStorage.getItem("token")) {
       navigate("/dashboard");
     }
   }, [navigate]);
 
-  // ✅ EMAIL REGISTRATION (NO TOKEN STORED)
-  async function handleRegister(e) {
+  async function handleLogin(e) {
     e.preventDefault();
     setError("");
 
     try {
-      await api.post("/accounts/register/", {
-        name,
+      const res = await api.post("/accounts/login/", {
         email,
         password,
       });
 
-      // 🚫 DO NOT store token here
-      navigate("/login"); // ✅ force login
+      localStorage.setItem("token", res.data.token);
+      navigate("/dashboard");
     } catch {
-      setError("Registration failed. Try another email.");
+      setError("Invalid email or password");
     }
   }
 
-  // ✅ GOOGLE SIGNUP (NO TOKEN STORED)
-  function handleGoogleSignup(cred) {
+  function handleGoogleLogin(cred) {
     api
       .post("/accounts/google-login/", {
         credential: cred.credential,
       })
-      .then(() => {
-        // 🚫 DO NOT store token here
-        navigate("/login"); // ✅ force login
+      .then((res) => {
+        localStorage.setItem("token", res.data.token);
+        navigate("/dashboard");
       })
-      .catch(() => alert("Google signup failed"));
+      .catch(() => alert("Google login failed"));
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-md border">
         <h2 className="text-2xl font-semibold text-center text-gray-900 mb-6">
-          Create Account
+          Welcome Back
         </h2>
 
         {error && (
@@ -68,16 +63,7 @@ export default function Register() {
           </div>
         )}
 
-        <form onSubmit={handleRegister} className="space-y-4">
-          <input
-            type="text"
-            placeholder="Full name"
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-
+        <form onSubmit={handleLogin} className="space-y-4">
           <input
             type="email"
             placeholder="Email address"
@@ -111,7 +97,7 @@ export default function Register() {
           </div>
 
           <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition">
-            Register
+            Login
           </button>
         </form>
 
@@ -123,15 +109,15 @@ export default function Register() {
 
         <div className="flex justify-center">
           <GoogleLogin
-            onSuccess={handleGoogleSignup}
-            onError={() => alert("Google signup error")}
+            onSuccess={handleGoogleLogin}
+            onError={() => alert("Google login error")}
           />
         </div>
 
         <p className="text-center text-sm text-gray-600 mt-6">
-          Already have an account?{" "}
-          <Link to="/login" className="text-blue-600 font-medium">
-            Login
+          New here?{" "}
+          <Link to="/register" className="text-blue-600 font-medium">
+            Create an account
           </Link>
         </p>
       </div>

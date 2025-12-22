@@ -1,7 +1,8 @@
 # categories/management/commands/seed_subcategories.py
 
 from django.core.management.base import BaseCommand
-from quiz.models import Category, Subcategory
+from categories.models import Category
+from quiz.models import Subcategory
 
 
 # ============================================
