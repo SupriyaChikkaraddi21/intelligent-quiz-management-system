@@ -19,7 +19,7 @@ export default function ProgressChartPage() {
       try {
         // ✅ FIX — correct endpoint (no "s")
         const res = await api.get("/quiz/progress/");
-
+        
         if (Array.isArray(res.data)) {
           setData(res.data);
         } else {

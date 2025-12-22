@@ -4,6 +4,7 @@ from django.utils.text import slugify
 from categories.models import CategoryGroup, Category
 
 
+
 SEED_DATA = [
     ("General & Knowledge", [
         "General Knowledge",

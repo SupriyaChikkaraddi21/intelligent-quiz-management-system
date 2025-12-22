@@ -13,7 +13,9 @@ urlpatterns = [
     path("api/accounts/", include("accounts.urls")),
 
     # QUIZ API (dashboard, categories, generate, progress, leaderboard)
-    path("api/", include("quiz.urls")),
+    # path("api/", include("quiz.urls")),
+    path("api/quiz/", include("quiz.urls")),
+
 ]
 
 # MEDIA files (profile avatars)

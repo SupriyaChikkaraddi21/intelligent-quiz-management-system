@@ -1,89 +1,73 @@
+import os
 import json
-from openai import OpenAI
+import re
+from groq import Groq
 
-client = OpenAI()
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+
+def extract_json(text):
+    match = re.search(r"\{[\s\S]*\}", text)
+    if not match:
+        return None
+    try:
+        return json.loads(match.group())
+    except json.JSONDecodeError:
+        return None
 
 
 def generate_questions(topic, difficulty, count, origin_hint=""):
-    """
-    AI Question generation utility.
-    - origin_hint (optional) forces Indian GK/Current Affairs context if needed.
-    - Backward compatible with old calls where origin_hint was not sent.
-    """
+    if not os.getenv("GROQ_API_KEY"):
+        print("GROQ_API_KEY not set")
+        return []
 
-    # Add contextual control
-    context_line = ""
-    if origin_hint:
-        context_line = f"\nIMPORTANT: {origin_hint}\n"
+    context = f"\nIMPORTANT: {origin_hint}\n" if origin_hint else ""
 
     prompt = f"""
-Generate {count} multiple-choice questions for the topic "{topic}".
-Difficulty level: {difficulty}.
-{context_line}
+Generate {count} multiple-choice questions for "{topic}"
+Difficulty: {difficulty}
+{context}
 
 STRICT RULES:
-- ALWAYS return valid JSON.
-- NO markdown.
-- NO extra text.
-- Choices must be a list of 4 items.
-- correct_choice_index must be an integer (0–3).
-- Explanation must be short and factual.
-- If topic relates to GK, Current Affairs, or National events:
-    * Prefer India-specific context unless explicitly stated otherwise.
+- Return ONLY valid JSON
+- NO markdown
+- EXACTLY 4 choices
+- correct_choice_index must be 0–3
 
-Return JSON ONLY in this structure:
-
+FORMAT:
 {{
   "questions": [
     {{
       "question": "string",
-      "choices": ["A", "B", "C", "D"],
+      "choices": ["A","B","C","D"],
       "correct_choice_index": 0,
       "explanation": "string",
-      "references": ["url1", "url2"]
+      "references": []
     }}
   ]
 }}
-    """
+"""
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="llama-3.1-8b-instant",
             messages=[
-                {"role": "system", "content": "Return ONLY valid JSON. No markdown, no extra text."},
+                {"role": "system", "content": "Return ONLY valid JSON"},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=1500,
+            temperature=0.6,
         )
 
-        raw = response.choices[0].message.content.strip()
+        raw = response.choices[0].message.content
+        data = extract_json(raw)
 
-        # Attempt JSON parsing
-        try:
-            data = json.loads(raw)
-        except json.JSONDecodeError:
-            print("JSON PARSE ERROR — Raw output:\n", raw)
+        if not data:
+            print("Invalid JSON from Groq:", raw)
             return []
 
-        # Ensure proper structure
-        questions = data.get("questions", [])
-        cleaned = []
-
-        for q in questions:
-            try:
-                cleaned.append({
-                    "question": q["question"],
-                    "choices": q["choices"],
-                    "correct_choice_index": int(q["correct_choice_index"]),
-                    "explanation": q.get("explanation", ""),
-                    "references": q.get("references", []),
-                })
-            except Exception as e:
-                print("Invalid question structure:", e)
-                continue
-
-        return cleaned
+        return data.get("questions", [])
 
     except Exception as e:
-        print("AI ERROR:", e)
+        print("GROQ ERROR:", e)
         return []

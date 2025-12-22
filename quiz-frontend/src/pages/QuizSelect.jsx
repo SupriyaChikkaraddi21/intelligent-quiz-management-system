@@ -23,9 +23,9 @@ export default function QuizSelect() {
   useEffect(() => {
     async function load() {
       try {
-        const groupRes = await api.get("/category-groups/");
-        const catRes = await api.get("/categories/");
-        const subRes = await api.get("/subcategories/");
+        const groupRes = await api.get("/quiz/category-groups/");
+        const catRes = await api.get("/quiz/categories/");
+        const subRes = await api.get("/quiz/subcategories/");
 
         setGroups(groupRes.data || []);
         setCategories(catRes.data || []);
