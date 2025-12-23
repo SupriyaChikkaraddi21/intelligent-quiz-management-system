@@ -11,199 +11,166 @@ import {
   BarChart,
   Bar,
   Cell,
-  Legend,
 } from "recharts";
 import api from "../api/api";
 
 export default function AnalyticsDashboard() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let cancelled = false;
     async function load() {
       try {
         const res = await api.get("/user/analytics/");
-        if (cancelled) return;
         setData(res.data);
-      } catch (err) {
-        console.error("Failed to fetch analytics:", err);
-        setError("Failed to load analytics. Try again later.");
+      } catch {
+        navigate("/dashboard");
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
     }
     load();
-    return () => (cancelled = true);
-  }, []);
+  }, [navigate]);
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading analytics…</div>
+      <div className="min-h-screen flex items-center justify-center bg-[#0B1220] text-white text-lg">
+        Loading analytics…
       </div>
     );
-
-  if (error)
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-red-600">{error}</div>
-      </div>
-    );
+  }
 
   const {
     total_quizzes,
     average_score,
     lifetime_accuracy,
-    progress_graph,
-    difficulty_accuracy,
-    recommendations,
-  } = data;
+    progress_graph = [],
+    difficulty_accuracy = {},
+    recommendations = [],
+  } = data || {};
 
-  // Format progress_graph to recharts-friendly (guard)
-  const progressData =
-    Array.isArray(progress_graph) && progress_graph.length
-      ? progress_graph.map((p) => ({ date: p.date, score: Number(p.score || 0) }))
-      : [];
+  const progressData = progress_graph.map((p) => ({
+    date: p.date,
+    score: Number(p.score || 0),
+  }));
 
-  // Difficulty bar data
   const difficultyData = [
-    { name: "easy", accuracy: difficulty_accuracy.easy || 0 },
-    { name: "medium", accuracy: difficulty_accuracy.medium || 0 },
-    { name: "hard", accuracy: difficulty_accuracy.hard || 0 },
+    { name: "Easy", value: difficulty_accuracy.easy || 0 },
+    { name: "Medium", value: difficulty_accuracy.medium || 0 },
+    { name: "Hard", value: difficulty_accuracy.hard || 0 },
   ];
 
-  const barColors = {
-    easy: "#10B981", // green
-    medium: "#F59E0B", // amber
-    hard: "#EF4444", // red
-  };
+  const colors = ["#22C55E", "#F59E0B", "#EF4444"];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-[#0F172A]">Analytics Dashboard</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Overview of your learning progress and strengths — powered by adaptive quizzes.
-            </p>
-          </div>
+    <div className="min-h-screen bg-[#0B1220] text-white font-sans px-10 py-10">
 
-          <div>
-            <button
-              onClick={() => navigate("/dashboard")}
-              className="px-4 py-2 bg-[#1F3A5F] text-white rounded-lg hover:bg-[#162b46]"
-            >
-              Back
-            </button>
-          </div>
+      {/* HEADER */}
+      <div className="flex justify-between items-start mb-10">
+        <div>
+          <h1 className="text-4xl font-extrabold tracking-tight">
+            Analytics Dashboard
+          </h1>
+          <p className="mt-2 text-sm text-slate-400 max-w-xl">
+            Deep insights into your performance, strengths, and learning patterns.
+          </p>
         </div>
 
-        {/* Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div className="p-4 bg-white rounded-xl shadow-sm border">
-            <div className="text-sm text-gray-500">Total quizzes</div>
-            <div className="text-2xl font-bold text-[#0F172A]">{total_quizzes}</div>
-          </div>
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="px-4 py-2 text-sm rounded-lg bg-white/10 hover:bg-white/20 transition"
+        >
+          Back
+        </button>
+      </div>
 
-          <div className="p-4 bg-white rounded-xl shadow-sm border">
-            <div className="text-sm text-gray-500">Average score</div>
-            <div className="text-2xl font-bold text-[#0F172A]">{average_score}%</div>
+      {/* METRICS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        {[
+          { label: "Total Quizzes", value: total_quizzes },
+          { label: "Average Score", value: `${average_score}%` },
+          { label: "Lifetime Accuracy", value: `${lifetime_accuracy}%` },
+        ].map((item, i) => (
+          <div
+            key={i}
+            className="rounded-2xl bg-white/5 border border-white/10 p-6"
+          >
+            <div className="text-xs uppercase tracking-widest text-slate-400">
+              {item.label}
+            </div>
+            <div className="mt-2 text-3xl font-bold">
+              {item.value}
+            </div>
           </div>
+        ))}
+      </div>
 
-          <div className="p-4 bg-white rounded-xl shadow-sm border">
-            <div className="text-sm text-gray-500">Lifetime accuracy</div>
-            <div className="text-2xl font-bold text-[#0F172A]">{lifetime_accuracy}%</div>
-          </div>
-        </div>
+      {/* CHARTS */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
 
-        {/* Charts area */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Score progress line */}
-          <div className="p-4 bg-white rounded-xl shadow-sm border">
-            <h3 className="font-semibold mb-3">Score Progress</h3>
-            {progressData.length ? (
-              <div style={{ width: "100%", height: 240 }}>
-                <ResponsiveContainer>
-                  <LineChart data={progressData}>
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="score" stroke="#2563EB" strokeWidth={3} dot />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <div className="text-sm text-gray-500">No progress data yet.</div>
-            )}
-          </div>
+        {/* SCORE TREND */}
+        <div className="rounded-2xl bg-white/5 border border-white/10 p-6">
+          <h2 className="text-lg font-semibold mb-4">Score Progress</h2>
 
-          {/* Difficulty accuracy bars */}
-          <div className="p-4 bg-white rounded-xl shadow-sm border">
-            <h3 className="font-semibold mb-3">Difficulty Accuracy</h3>
-            <div style={{ width: "100%", height: 240 }}>
+          {progressData.length ? (
+            <div className="h-[280px]">
               <ResponsiveContainer>
-                <BarChart data={difficultyData} layout="vertical" margin={{ left: 20 }}>
-                  <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 12 }} />
-                  <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 12 }} />
+                <LineChart data={progressData}>
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                  <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
                   <Tooltip />
-                  <Legend />
-                  <Bar dataKey="accuracy" fill="#8884d8" barSize={18}>
-                    {difficultyData.map((entry) => (
-                      <Cell key={entry.name} fill={barColors[entry.name] || "#8884d8"} />
-                    ))}
-                  </Bar>
-                </BarChart>
+                  <Line
+                    type="monotone"
+                    dataKey="score"
+                    stroke="#38BDF8"
+                    strokeWidth={3}
+                    dot
+                  />
+                </LineChart>
               </ResponsiveContainer>
             </div>
-
-            <div className="mt-3 text-sm text-gray-600">
-              Accuracy per difficulty gives quick indication where to focus practice.
-            </div>
-          </div>
+          ) : (
+            <p className="text-sm text-slate-400">No score data yet.</p>
+          )}
         </div>
 
-        {/* Recommendations + details */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="col-span-2 p-4 bg-white rounded-xl shadow-sm border">
-            <h3 className="font-semibold mb-3">Recommendations</h3>
-            <ul className="list-disc ml-5 space-y-2 text-sm text-gray-700">
-              {Array.isArray(recommendations) && recommendations.length ? (
-                recommendations.map((r, i) => <li key={i}>{r}</li>)
-              ) : (
-                <li>No recommendations right now.</li>
-              )}
-            </ul>
+        {/* DIFFICULTY */}
+        <div className="rounded-2xl bg-white/5 border border-white/10 p-6">
+          <h2 className="text-lg font-semibold mb-4">Accuracy by Difficulty</h2>
+
+          <div className="h-[280px]">
+            <ResponsiveContainer>
+              <BarChart data={difficultyData} layout="vertical">
+                <XAxis type="number" domain={[0, 100]} />
+                <YAxis type="category" dataKey="name" />
+                <Tooltip />
+                <Bar dataKey="value">
+                  {difficultyData.map((_, i) => (
+                    <Cell key={i} fill={colors[i]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
 
-          <div className="p-4 bg-white rounded-xl shadow-sm border">
-            <h3 className="font-semibold mb-3">Quick tips</h3>
-            <ol className="list-decimal ml-5 text-sm text-gray-700 space-y-2">
-              <li>Review explanations for incorrect answers.</li>
-              <li>Do short medium-level quizzes daily for retention.</li>
-              <li>Target fundamentals before attempting many hard quizzes.</li>
-            </ol>
-          </div>
+          <p className="mt-3 text-xs text-slate-400">
+            Focus more on levels with lower accuracy.
+          </p>
         </div>
+      </div>
 
-        {/* Footer / actions */}
-        <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={() => navigate("/create-quiz")}
-            className="px-4 py-2 bg-white border rounded-lg hover:bg-gray-50"
-          >
-            Create Practice Quiz
-          </button>
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="px-4 py-2 bg-[#1F3A5F] text-white rounded-lg hover:bg-[#162b46]"
-          >
-            Back to Dashboard
-          </button>
-        </div>
+      {/* RECOMMENDATIONS */}
+      <div className="rounded-2xl bg-white/5 border border-white/10 p-6">
+        <h2 className="text-lg font-semibold mb-3">Recommendations</h2>
+
+        <ul className="list-disc ml-5 space-y-2 text-sm text-slate-300">
+          {recommendations.length ? (
+            recommendations.map((r, i) => <li key={i}>{r}</li>)
+          ) : (
+            <li>Keep practicing consistently to improve accuracy.</li>
+          )}
+        </ul>
       </div>
     </div>
   );

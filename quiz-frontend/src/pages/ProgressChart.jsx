@@ -12,65 +12,52 @@ import {
 
 export default function ProgressChartPage() {
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        // ✅ FIX — correct endpoint (no "s")
         const res = await api.get("/user/progress/");
-        
         if (Array.isArray(res.data)) {
           setData(res.data);
-        } else {
-          console.warn("Progress API returned unexpected:", res.data);
-          setData([]);
         }
       } catch (err) {
-        console.error("Failed to load progress:", err);
-        setData([]);
-      } finally {
-        setLoading(false);
+        console.error("Progress load failed:", err);
       }
     }
-
     load();
   }, []);
 
-  if (loading)
+  if (!data.length) {
     return (
-      <div className="text-center p-4 text-gray-500 text-lg">
-        Loading progress chart...
+      <div className="h-full flex items-center justify-center text-slate-400">
+        No progress data yet.
       </div>
     );
-
-  if (!data.length)
-    return (
-      <div className="p-4 text-center text-gray-600">
-        No progress data available yet.
-      </div>
-    );
+  }
 
   return (
-    <div className="p-6">
-      <h1 className="text-xl font-bold mb-4">Your Score Progress</h1>
-
-      <div style={{ height: 350 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis domain={[0, 100]} />
-            <Tooltip />
-            <Line
-              type="monotone"
-              dataKey="score"
-              stroke="#4a90e2"
-              strokeWidth={3}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+        <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} />
+        <YAxis domain={[0, 100]} stroke="#94a3b8" fontSize={12} />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: "#020617",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: "8px",
+            color: "white",
+          }}
+        />
+        <Line
+          type="monotone"
+          dataKey="score"
+          stroke="#22d3ee"
+          strokeWidth={3}
+          dot={{ r: 4 }}
+          activeDot={{ r: 6 }}
+        />
+      </LineChart>
+    </ResponsiveContainer>
   );
 }

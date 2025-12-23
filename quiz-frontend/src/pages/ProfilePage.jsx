@@ -1,3 +1,4 @@
+// src/pages/ProfilePage.jsx
 import React, { useEffect, useState } from "react";
 import api from "../api/api";
 
@@ -9,49 +10,36 @@ export default function ProfilePage() {
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
 
-  // Utility: ensure a URL is absolute (prefix origin if needed)
   const toAbsoluteUrl = (url) => {
     if (!url) return null;
-    if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    // url might be '/media/avatars/....' -> prefix origin
+    if (url.startsWith("http")) return url;
     return `${window.location.origin}${url}`;
   };
 
-  // -----------------------------
-  // Load profile data
-  // -----------------------------
   const loadProfile = async () => {
     try {
       const res = await api.get("/accounts/profile/");
       setProfile(res.data);
-
       setFullName(res.data.full_name || "");
-      setPreferredDifficulty(res.data.preferences?.preferred_difficulty || "");
-      setPreferredCategory(res.data.preferences?.preferred_category || "");
+      setPreferredDifficulty(
+        res.data.preferences?.preferred_difficulty || ""
+      );
+      setPreferredCategory(
+        res.data.preferences?.preferred_category || ""
+      );
 
-      // backend may return either `avatar` (relative path) or `avatar_url` (absolute)
-      const avatarFromApi =
+      const avatar =
         res.data.avatar_url ?? res.data.avatar ?? null;
-
-      if (avatarFromApi) {
-        setAvatarPreview(toAbsoluteUrl(avatarFromApi));
-      } else {
-        setAvatarPreview(null);
-      }
-    } catch (err) {
-      console.error("Failed to load profile:", err);
+      setAvatarPreview(avatar ? toAbsoluteUrl(avatar) : null);
+    } catch {
       alert("Failed to load profile");
     }
   };
 
   useEffect(() => {
     loadProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // -----------------------------
-  // Save profile
-  // -----------------------------
   const saveProfile = async () => {
     try {
       await api.post("/accounts/profile/", {
@@ -61,23 +49,17 @@ export default function ProfilePage() {
           preferred_category: preferredCategory,
         },
       });
-
-      alert("Profile updated!");
-      await loadProfile();
-    } catch (err) {
-      console.error("Failed to update profile:", err);
+      alert("Profile updated");
+      loadProfile();
+    } catch {
       alert("Failed to update profile");
     }
   };
 
-  // -----------------------------
-  // Upload avatar
-  // -----------------------------
   const uploadAvatar = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // show local preview immediately
     const localUrl = URL.createObjectURL(file);
     setAvatarPreview(localUrl);
 
@@ -86,65 +68,65 @@ export default function ProfilePage() {
 
     try {
       setUploading(true);
-      const res = await api.post("/accounts/profile/avatar/", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await api.post(
+        "/accounts/profile/avatar/",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
 
-      // Prefer backend-provided avatar_url if present
-      const avatarUrlFromResponse =
+      const avatar =
         res?.data?.avatar_url ?? res?.data?.avatar ?? null;
-
-      if (avatarUrlFromResponse) {
-        setAvatarPreview(toAbsoluteUrl(avatarUrlFromResponse));
-      } else {
-        // As a fallback, reload profile to get avatar path
-        await loadProfile();
-      }
-
-      alert("Avatar uploaded!");
-    } catch (err) {
-      console.error("Failed to upload avatar:", err);
-      alert("Failed to upload avatar");
-      // revert local preview when failed
-      await loadProfile();
+      if (avatar) setAvatarPreview(toAbsoluteUrl(avatar));
+    } catch {
+      alert("Avatar upload failed");
+      loadProfile();
     } finally {
       setUploading(false);
-      // revoke local URL object after some time to release memory (optional)
-      setTimeout(() => {
-        if (localUrl) URL.revokeObjectURL(localUrl);
-      }, 5000);
     }
   };
 
-  if (!profile)
+  if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-xl">
-        Loading profile...
+      <div className="flex items-center justify-center h-[60vh] text-slate-300">
+        Loading profile…
       </div>
     );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 flex justify-center">
-      <div className="w-full max-w-2xl bg-white shadow-lg rounded-xl p-8">
-        <h1 className="text-3xl font-bold text-center mb-8">Your Profile</h1>
+    <div className="max-w-5xl mx-auto">
 
-        {/* Avatar Section */}
+      {/* HEADER */}
+      <div className="mb-10">
+        <h1 className="text-3xl font-bold text-white">
+          Profile
+        </h1>
+        <p className="mt-2 text-sm text-slate-400">
+          Manage your personal details and learning preferences.
+        </p>
+      </div>
+
+      {/* CARD */}
+      <div className="max-w-xl rounded-3xl bg-white/5 border border-white/10 p-8 backdrop-blur-xl">
+
+        {/* AVATAR */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-gray-300 bg-white flex items-center justify-center">
+          <div className="w-28 h-28 rounded-full overflow-hidden border border-white/20 flex items-center justify-center bg-white/10">
             {avatarPreview ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={avatarPreview}
                 alt="Avatar"
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="text-gray-400">Avatar</div>
+              <span className="text-slate-400 text-sm">
+                No Avatar
+              </span>
             )}
           </div>
 
-          <label className="mt-4 cursor-pointer inline-flex items-center gap-3 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-            {uploading ? "Uploading..." : "Upload Avatar"}
+          <label className="mt-4 cursor-pointer text-sm px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition">
+            {uploading ? "Uploading…" : "Change Avatar"}
             <input
               type="file"
               accept="image/*"
@@ -154,52 +136,53 @@ export default function ProfilePage() {
           </label>
         </div>
 
-        {/* Profile Fields */}
+        {/* FORM */}
         <div className="space-y-6">
-          {/* Full Name */}
           <div>
-            <label className="font-semibold">Full Name</label>
+            <label className="text-xs uppercase text-slate-400">
+              Full Name
+            </label>
             <input
-              type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="mt-2 w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="mt-2 w-full rounded-lg bg-white/10 border border-white/10 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
             />
           </div>
 
-          {/* Difficulty */}
           <div>
-            <label className="font-semibold">Preferred Difficulty</label>
+            <label className="text-xs uppercase text-slate-400">
+              Preferred Difficulty
+            </label>
             <select
               value={preferredDifficulty}
               onChange={(e) => setPreferredDifficulty(e.target.value)}
-              className="mt-2 w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="mt-2 w-full rounded-lg bg-white/10 border border-white/10 px-4 py-3 text-white focus:outline-none"
             >
-              <option value="">-- None --</option>
+              <option value="">None</option>
               <option value="Easy">Easy</option>
               <option value="Medium">Medium</option>
               <option value="Hard">Hard</option>
             </select>
           </div>
 
-          {/* Category */}
           <div>
-            <label className="font-semibold">Preferred Category</label>
+            <label className="text-xs uppercase text-slate-400">
+              Preferred Category
+            </label>
             <input
-              type="text"
               value={preferredCategory}
               onChange={(e) => setPreferredCategory(e.target.value)}
-              placeholder="Eg: Python, Java, DBMS"
-              className="mt-2 w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              placeholder="Python, Java, DBMS"
+              className="mt-2 w-full rounded-lg bg-white/10 border border-white/10 px-4 py-3 text-white focus:outline-none"
             />
           </div>
         </div>
 
-        {/* Save Button */}
-        <div className="mt-8 text-center">
+        {/* SAVE */}
+        <div className="mt-10 flex justify-end">
           <button
             onClick={saveProfile}
-            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold"
+            className="px-6 py-3 rounded-xl bg-cyan-500 text-black font-semibold hover:bg-cyan-400 transition"
           >
             Save Changes
           </button>

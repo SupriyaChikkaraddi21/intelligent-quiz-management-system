@@ -18,8 +18,6 @@ export default function QuizAttempt() {
   const [quizLocked, setQuizLocked] = useState(false);
 
   const timerRef = useRef(null);
-
-  // AUDIO CONTEXT for consistent beep
   const audioCtxRef = useRef(null);
 
   const initAudio = () => {
@@ -52,9 +50,7 @@ export default function QuizAttempt() {
     osc.stop(ctx.currentTime + duration);
   };
 
-  // -------------------------------------------
-  // LOAD ATTEMPT
-  // -------------------------------------------
+  // ---------------- LOAD ATTEMPT
   useEffect(() => {
     const load = async () => {
       try {
@@ -67,19 +63,18 @@ export default function QuizAttempt() {
         data.questions.forEach((q) => (map[q.question_id] = q.selected));
         setAnswerMap(map);
 
-        if (data.questions.length > 0)
+        if (data.questions.length > 0) {
           setSelected(map[data.questions[0].question_id] ?? null);
+        }
 
         const start = new Date(data.started_at).getTime();
-        const now = Date.now();
-        const elapsed = Math.floor((now - start) / 1000);
+        const elapsed = Math.floor((Date.now() - start) / 1000);
         const remain = data.time_limit - elapsed;
 
         setTimeLeft(remain > 0 ? remain : 0);
-
         setLoading(false);
       } catch (err) {
-        console.error("Load error:", err);
+        console.error(err);
         alert("Failed to load quiz.");
       }
     };
@@ -87,9 +82,7 @@ export default function QuizAttempt() {
     load();
   }, [attemptId]);
 
-  // -------------------------------------------
-  // TIMER + BEEP
-  // -------------------------------------------
+  // ---------------- TIMER
   useEffect(() => {
     if (timeLeft === null) return;
 
@@ -115,53 +108,34 @@ export default function QuizAttempt() {
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
-  // -------------------------------------------
-  // TIMEOUT
-  // -------------------------------------------
-  const handleTimeout = () => {
+  const handleTimeout = async () => {
     clearInterval(timerRef.current);
     setQuizLocked(true);
     setShowTimeoutModal(true);
 
     setTimeout(async () => {
-      try {
-        await api.post(`/attempt/${attemptId}/finish/`, { timeout: true });
-        navigate(`/results/${attemptId}?timeout=1`);
-      } catch {
-        alert("Auto-submit failed.");
-      }
+      await api.post(`/attempt/${attemptId}/finish/`, { timeout: true });
+      navigate(`/results/${attemptId}?timeout=1`);
     }, 2000);
   };
 
-  // -------------------------------------------
-  // SAVE ANSWER
-  // -------------------------------------------
   const saveAnswer = async (questionId, choiceIndex) => {
-    try {
-      await api.post(`/attempt/${attemptId}/answer/`, {
-        question_id: questionId,
-        selected: Number(choiceIndex),
-      });
-      setAnswerMap((p) => ({ ...p, [questionId]: choiceIndex }));
-    } catch (err) {
-      console.error("Save error:", err);
-    }
+    await api.post(`/attempt/${attemptId}/answer/`, {
+      question_id: questionId,
+      selected: Number(choiceIndex),
+    });
+    setAnswerMap((p) => ({ ...p, [questionId]: choiceIndex }));
   };
 
   const handleSelect = (index) => {
     if (quizLocked) return;
     initAudio();
-
     const q = questions[currentIndex];
     setSelected(index);
     saveAnswer(q.question_id, index);
   };
 
-  // -------------------------------------------
-  // NAVIGATION
-  // -------------------------------------------
   const goNext = () => {
-    initAudio();
     if (currentIndex < questions.length - 1) {
       const next = currentIndex + 1;
       setCurrentIndex(next);
@@ -170,7 +144,6 @@ export default function QuizAttempt() {
   };
 
   const goPrev = () => {
-    initAudio();
     if (currentIndex > 0) {
       const prev = currentIndex - 1;
       setCurrentIndex(prev);
@@ -178,71 +151,41 @@ export default function QuizAttempt() {
     }
   };
 
-  // -------------------------------------------
-  // FINISH QUIZ
-  // -------------------------------------------
   const finishQuiz = async () => {
-    initAudio();
-    if (quizLocked) return;
-
     clearInterval(timerRef.current);
-
-    try {
-      await api.post(`/attempt/${attemptId}/finish/`);
-      navigate(`/results/${attemptId}`);
-    } catch {
-      alert("Error finishing quiz.");
-    }
+    await api.post(`/attempt/${attemptId}/finish/`);
+    navigate(`/results/${attemptId}`);
   };
 
-  // -------------------------------------------
-  // UI
-  // -------------------------------------------
-  if (loading)
-    return <div className="min-h-screen flex items-center justify-center">Loading…</div>;
-
-  if (!questions.length)
-    return <div className="min-h-screen flex items-center justify-center">No questions found.</div>;
+  if (loading) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center text-slate-300">
+        Loading…
+      </div>
+    );
+  }
 
   const q = questions[currentIndex];
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 flex justify-center relative">
+    <div className="w-full min-h-[calc(100vh-64px)] flex justify-center px-6 py-10">
+      <div className="w-full max-w-3xl rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl p-8 text-white">
 
-      {/* TIMEOUT MODAL */}
-      {showTimeoutModal && (
-        <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-xl text-center shadow-xl animate-fadeIn">
-            <h2 className="text-xl font-bold text-red-600 mb-3">⏳ Time's Up!</h2>
-            <p className="text-gray-700">Submitting your quiz...</p>
-            <div className="loader mx-auto mt-4"></div>
-          </div>
-        </div>
-      )}
-
-      <div className="w-full max-w-3xl bg-white shadow-lg rounded-xl p-8">
-
-        {/* TOP BAR */}
-        <div className="flex justify-between items-center mb-4">
-          <div className="text-sm text-gray-600">
+        {/* HEADER */}
+        <div className="flex justify-between items-center mb-6">
+          <span className="text-sm text-slate-300">
             Question {currentIndex + 1} / {questions.length}
-          </div>
+          </span>
 
-          {/* TIMER WITH FLASH ANIMATION */}
-          <div
-            className={`
-              text-lg font-bold px-4 py-2 rounded-lg
-              ${timeLeft > 60 ? "bg-blue-100 text-blue-700" : ""}
-              ${timeLeft <= 60 && timeLeft > 20 ? "bg-yellow-100 text-yellow-700" : ""}
-              ${timeLeft <= 20 ? "bg-red-100 text-red-700 flash-timer" : ""}
-            `}
-          >
+          <span className="px-4 py-2 rounded-lg font-semibold bg-blue-500/20 text-blue-300">
             ⏳ {formatTime(timeLeft)}
-          </div>
+          </span>
         </div>
 
         {/* QUESTION */}
-        <h2 className="text-xl font-bold mb-6">{q.question_text}</h2>
+        <h2 className="text-xl font-semibold mb-6 text-white">
+          {q.question_text}
+        </h2>
 
         {/* OPTIONS */}
         <div className="space-y-3">
@@ -251,14 +194,13 @@ export default function QuizAttempt() {
               key={index}
               onClick={() => handleSelect(index)}
               disabled={quizLocked}
-              className={`
-                w-full text-left p-4 rounded-lg border transition
+              className={`w-full text-left px-5 py-4 rounded-xl border transition
                 ${
                   selected === index
-                    ? "bg-blue-100 border-blue-500"
-                    : "bg-gray-50 hover:bg-gray-100 border-gray-300"
+                    ? "bg-blue-500/20 border-blue-400 ring-2 ring-blue-400/40"
+                    : "bg-white/5 border-white/10 hover:bg-white/10"
                 }
-                ${quizLocked ? "opacity-50 cursor-not-allowed" : ""}
+                ${quizLocked ? "opacity-60 cursor-not-allowed" : ""}
               `}
             >
               {choice}
@@ -267,18 +209,11 @@ export default function QuizAttempt() {
         </div>
 
         {/* CONTROLS */}
-        <div className="flex justify-between mt-8">
+        <div className="flex justify-between mt-10">
           <button
             onClick={goPrev}
             disabled={currentIndex === 0 || quizLocked}
-            className={`
-              px-4 py-2 rounded-lg border
-              ${
-                currentIndex === 0 || quizLocked
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-gray-300 hover:bg-gray-400"
-              }
-            `}
+            className="px-5 py-2 rounded-lg bg-white/10 text-slate-300 disabled:opacity-40"
           >
             Previous
           </button>
@@ -287,14 +222,7 @@ export default function QuizAttempt() {
             <button
               onClick={goNext}
               disabled={quizLocked}
-              className={`
-                px-4 py-2 text-white rounded-lg
-                ${
-                  quizLocked
-                    ? "bg-gray-300 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700"
-                }
-              `}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Next
             </button>
@@ -302,56 +230,13 @@ export default function QuizAttempt() {
             <button
               onClick={finishQuiz}
               disabled={quizLocked}
-              className={`
-                px-4 py-2 text-white rounded-lg
-                ${
-                  quizLocked
-                    ? "bg-gray-300 cursor-not-allowed"
-                    : "bg-green-600 hover:bg-green-700"
-                }
-              `}
+              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
             >
               Finish Quiz
             </button>
           )}
         </div>
       </div>
-
-      {/* CSS */}
-      <style>{`
-        @keyframes flashPulse {
-          0% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(1.05); }
-          100% { opacity: 1; transform: scale(1); }
-        }
-
-        .flash-timer {
-          animation: flashPulse 0.9s infinite ease-in-out;
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; transform: scale(0.95); }
-          to { opacity: 1; transform: scale(1); }
-        }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-
-        .loader {
-          border: 4px solid #ddd;
-          border-top: 4px solid #2563eb;
-          border-radius: 50%;
-          width: 30px;
-          height: 30px;
-          animation: spin 0.7s linear infinite;
-        }
-
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }
