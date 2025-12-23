@@ -7,12 +7,14 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 
 def extract_json(text):
-    match = re.search(r"\{[\s\S]*\}", text)
-    if not match:
-        return None
+    """
+    Safely extract first valid JSON object from text
+    """
     try:
-        return json.loads(match.group())
-    except json.JSONDecodeError:
+        start = text.index("{")
+        end = text.rindex("}") + 1
+        return json.loads(text[start:end])
+    except Exception:
         return None
 
 
@@ -53,20 +55,41 @@ FORMAT:
             model="llama-3.1-8b-instant",
             messages=[
                 {"role": "system", "content": "Return ONLY valid JSON"},
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": prompt},
             ],
-            max_tokens=1500,
+            max_tokens=1200,
             temperature=0.6,
         )
 
         raw = response.choices[0].message.content
         data = extract_json(raw)
 
-        if not data:
+        if not data or "questions" not in data:
             print("Invalid JSON from Groq:", raw)
             return []
 
-        return data.get("questions", [])
+        cleaned = []
+
+        for q in data["questions"]:
+            try:
+                if (
+                    not q.get("question")
+                    or not isinstance(q.get("choices"), list)
+                    or len(q["choices"]) != 4
+                ):
+                    continue
+
+                cleaned.append({
+                    "question": q["question"],
+                    "choices": q["choices"],
+                    "correct_choice_index": int(q["correct_choice_index"]),
+                    "explanation": q.get("explanation", ""),
+                    "references": q.get("references", []),
+                })
+            except Exception:
+                continue
+
+        return cleaned
 
     except Exception as e:
         print("GROQ ERROR:", e)

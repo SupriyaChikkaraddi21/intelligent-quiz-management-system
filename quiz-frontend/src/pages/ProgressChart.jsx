@@ -18,7 +18,7 @@ export default function ProgressChartPage() {
     async function load() {
       try {
         // ✅ FIX — correct endpoint (no "s")
-        const res = await api.get("/quiz/progress/");
+        const res = await api.get("/user/progress/");
         
         if (Array.isArray(res.data)) {
           setData(res.data);

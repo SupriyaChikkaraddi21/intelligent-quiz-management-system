@@ -9,7 +9,7 @@ export default function Leaderboard() {
     async function load() {
       try {
         // ✅ FIXED — correct endpoint (NO "s")
-        const res = await api.get("/quiz/leaderboard/");
+        const res = await api.get("/leaderboard/");
         setRows(res.data || []);
       } catch (err) {
         console.error("Failed to load leaderboard:", err);
