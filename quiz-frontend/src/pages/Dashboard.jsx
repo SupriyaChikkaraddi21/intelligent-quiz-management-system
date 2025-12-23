@@ -20,7 +20,7 @@ export default function Dashboard() {
 
       try {
         // 🔥 FIXED — ALWAYS USE RELATIVE PATH WITHOUT LEADING SLASH
-        const res = await api.get("quiz/dashboard/");
+        const res = await api.get("/user/dashboard/");
         setData(res.data);
       } catch (err) {
         console.error("Dashboard error:", err);

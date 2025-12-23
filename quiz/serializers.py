@@ -85,23 +85,20 @@ class QuestionAttemptSerializer(serializers.ModelSerializer):
 # ============================================================
 # QUIZ ATTEMPT SERIALIZER (UPDATED)
 # ============================================================
-
 class QuizAttemptSerializer(serializers.ModelSerializer):
-    questions = QuestionAttemptSerializer(
-        many=True,
-        read_only=True,
-        source="question_attempts"
-    )
+    quiz_title = serializers.CharField(source="quiz.title", read_only=True)
+    started_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = QuizAttempt
         fields = [
             "id",
-            "quiz",
+            "quiz_title",        # ✅ used in Dashboard
             "score",
-            "current_difficulty",   # ⭐ NEW FIELD
-            "questions",
+            "completed",
+            "started_at",        # ✅ fixes “Not available”
         ]
+
 
 
 # ============================================================
