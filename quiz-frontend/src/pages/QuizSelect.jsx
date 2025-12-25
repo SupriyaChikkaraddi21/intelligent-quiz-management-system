@@ -18,9 +18,6 @@ export default function QuizSelect() {
 
   const [loading, setLoading] = useState(true);
 
-  // ---------------------------------------------------------
-  // LOAD DATA (UNCHANGED)
-  // ---------------------------------------------------------
   useEffect(() => {
     async function load() {
       try {
@@ -41,7 +38,6 @@ export default function QuizSelect() {
     load();
   }, []);
 
-  // FILTER CATEGORIES BY GROUP (UNCHANGED)
   const filteredCategories = selectedGroup
     ? categories.filter((c) =>
         groups
@@ -50,14 +46,10 @@ export default function QuizSelect() {
       )
     : [];
 
-  // FILTER SUBCATEGORIES BY CATEGORY (UNCHANGED)
   const filteredSubs = subcategories.filter(
     (s) => String(s.category) === String(selectedCategory)
   );
 
-  // ---------------------------------------------------------
-  // GENERATE + START QUIZ (UNCHANGED)
-  // ---------------------------------------------------------
   async function generateQuiz() {
     if (!selectedCategory) {
       alert("Please select a category");
@@ -93,23 +85,24 @@ export default function QuizSelect() {
     }
   }
 
-  // ---------------------------------------------------------
-  // UI
-  // ---------------------------------------------------------
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-slate-300">
+      <div className="min-h-screen flex items-center justify-center text-slate-500">
         Loading quiz setup…
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0B1220] text-white px-10 py-10">
+    <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-sky-100
+                    text-slate-800 px-10 py-10">
+
       {/* HEADER */}
       <div className="mb-12">
-        <h1 className="text-4xl font-bold tracking-tight">Create Your Quiz</h1>
-        <p className="mt-2 text-slate-400 max-w-2xl">
+        <h1 className="text-4xl font-bold tracking-tight text-slate-900">
+          Create Your Quiz
+        </h1>
+        <p className="mt-2 text-slate-600 max-w-2xl">
           Choose a category, difficulty, and question count to begin.
         </p>
       </div>
@@ -128,15 +121,15 @@ export default function QuizSelect() {
                   setSelectedCategory(null);
                   setSelectedSubcategory(null);
                 }}
-                className={`rounded-2xl p-5 text-left border transition-all
+                className={`rounded-2xl p-5 text-left border transition
                 ${
                   selectedGroup === g.id
-                    ? "bg-white/10 border-cyan-400 shadow-lg"
-                    : "bg-white/5 border-white/10 hover:bg-white/10"
+                    ? "bg-sky-100 border-sky-400 shadow-md"
+                    : "bg-white border-sky-200 hover:bg-sky-50"
                 }`}
               >
                 <div className="text-lg font-medium">{g.name}</div>
-                <div className="text-sm text-slate-400 mt-1">
+                <div className="text-sm text-slate-600 mt-1">
                   Select quizzes from this group
                 </div>
               </button>
@@ -159,8 +152,8 @@ export default function QuizSelect() {
                   className={`rounded-2xl p-4 text-left border transition
                   ${
                     selectedCategory === c.id
-                      ? "bg-white/10 border-emerald-400"
-                      : "bg-white/5 border-white/10 hover:bg-white/10"
+                      ? "bg-sky-100 border-emerald-400"
+                      : "bg-white border-sky-200 hover:bg-sky-50"
                   }`}
                 >
                   {c.name}
@@ -174,7 +167,7 @@ export default function QuizSelect() {
         {selectedCategory && (
           <section>
             <h2 className="text-xl font-semibold mb-4">
-              3. Subcategory <span className="text-sm text-slate-400">(optional)</span>
+              3. Subcategory <span className="text-sm text-slate-500">(optional)</span>
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {filteredSubs.map((s) => (
@@ -184,8 +177,8 @@ export default function QuizSelect() {
                   className={`rounded-2xl p-4 text-left border transition
                   ${
                     selectedSubcategory === s.id
-                      ? "bg-white/10 border-purple-400"
-                      : "bg-white/5 border-white/10 hover:bg-white/10"
+                      ? "bg-sky-100 border-purple-400"
+                      : "bg-white border-sky-200 hover:bg-sky-50"
                   }`}
                 >
                   {s.name}
@@ -206,8 +199,8 @@ export default function QuizSelect() {
                 className={`px-6 py-3 rounded-full uppercase text-sm tracking-wide transition
                 ${
                   difficulty === lvl
-                    ? "bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-semibold"
-                    : "bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10"
+                    ? "bg-sky-500 text-white font-semibold"
+                    : "bg-white border border-sky-200 text-slate-600 hover:bg-sky-50"
                 }`}
               >
                 {lvl}
@@ -225,7 +218,8 @@ export default function QuizSelect() {
             max={50}
             value={count}
             onChange={(e) => setCount(Math.max(1, Number(e.target.value)))}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
+            className="w-full bg-white border border-sky-200 rounded-xl
+                       px-4 py-3 text-slate-800"
           />
         </section>
 
@@ -234,8 +228,7 @@ export default function QuizSelect() {
           <button
             onClick={generateQuiz}
             className="w-full py-4 rounded-2xl text-lg font-semibold
-            bg-gradient-to-r from-cyan-400 to-blue-500
-            text-black hover:opacity-90 transition"
+                       bg-sky-500 text-white hover:bg-sky-600 transition"
           >
             Generate & Start Quiz
           </button>

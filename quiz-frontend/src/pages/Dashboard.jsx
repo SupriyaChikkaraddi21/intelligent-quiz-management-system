@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../api/api";
 import { useNavigate } from "react-router-dom";
-import ProgressChartPage from "./ProgressChart";
+
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
@@ -33,7 +33,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center text-slate-300">
+      <div className="flex-1 flex items-center justify-center text-slate-500">
         Loading dashboard…
       </div>
     );
@@ -46,72 +46,76 @@ export default function Dashboard() {
   };
 
   return (
-    /* 🔥 THIS IS THE KEY FIX */
-    <main className="flex-1 bg-gradient-to-br from-[#050B1A] via-[#060E23] to-[#040814] text-white overflow-y-auto">
+    <main className="flex-1 bg-gradient-to-br from-white via-sky-50 to-sky-100
+                     text-slate-800 overflow-y-auto">
 
       {/* HEADER */}
       <section className="px-10 pt-10 pb-6">
-        <h1 className="text-3xl font-semibold tracking-tight">
+        <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
           Your Learning Dashboard
         </h1>
-        <p className="text-sm text-slate-400 mt-1">
+        <p className="text-sm text-slate-600 mt-1">
           Track how your quiz performance evolves over time.
         </p>
       </section>
 
       {/* KPI CARDS */}
       <section className="px-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="rounded-2xl bg-white/5 border border-white/10 p-6">
-          <p className="text-xs uppercase text-slate-400">Latest Score</p>
-          <p className="mt-4 text-3xl font-bold">
+        <div className="rounded-2xl bg-white border border-sky-200 p-6">
+          <p className="text-xs uppercase text-slate-500">Latest Score</p>
+          <p className="mt-4 text-3xl font-bold text-sky-600">
             {Math.round(data.latest_score ?? 0)}%
           </p>
         </div>
 
-        <div className="rounded-2xl bg-white/5 border border-white/10 p-6">
-          <p className="text-xs uppercase text-slate-400">Best Score</p>
-          <p className="mt-4 text-3xl font-bold">
+        <div className="rounded-2xl bg-white border border-sky-200 p-6">
+          <p className="text-xs uppercase text-slate-500">Best Score</p>
+          <p className="mt-4 text-3xl font-bold text-sky-600">
             {Math.round(data.best_score ?? 0)}%
           </p>
         </div>
       </section>
 
-      {/* SCORE TREND */}
+      {/* SCORE TREND
       <section className="px-10 mt-8">
-        <div className="rounded-2xl bg-white/5 border border-white/10 p-6">
-          <h2 className="text-lg font-medium mb-4">Score Trend</h2>
+        <div className="rounded-2xl bg-white border border-sky-200 p-6">
+          <h2 className="text-lg font-medium mb-4 text-slate-900">
+            Score Trend
+          </h2>
           <div className="h-[340px]">
             <ProgressChartPage />
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* RECENT ATTEMPTS */}
       <section className="px-10 mt-10 pb-14">
-        <h2 className="text-lg font-medium mb-4">Recent Attempts</h2>
+        <h2 className="text-lg font-medium mb-4 text-slate-900">
+          Recent Attempts
+        </h2>
 
-        <div className="rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
+        <div className="rounded-2xl bg-white border border-sky-200 overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-white/5">
+            <thead className="bg-sky-50">
               <tr>
-                <th className="px-6 py-3 text-left text-slate-400">Attempt</th>
-                <th className="px-6 py-3 text-left text-slate-400">Date</th>
-                <th className="px-6 py-3 text-right text-slate-400">Score</th>
-                <th className="px-6 py-3 text-right text-slate-400">Status</th>
+                <th className="px-6 py-3 text-left text-slate-600">Attempt</th>
+                <th className="px-6 py-3 text-left text-slate-600">Date</th>
+                <th className="px-6 py-3 text-right text-slate-600">Score</th>
+                <th className="px-6 py-3 text-right text-slate-600">Status</th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-white/10">
+            <tbody className="divide-y divide-sky-200">
               {data.recent_scores?.length ? (
                 data.recent_scores.map((r, i) => (
-                  <tr key={i} className="hover:bg-white/5">
+                  <tr key={i} className="hover:bg-sky-50 transition">
                     <td className="px-6 py-4">
                       <div className="font-medium">Attempt {i + 1}</div>
-                      <div className="text-xs text-slate-400">
+                      <div className="text-xs text-slate-500">
                         {r.quiz_title}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-slate-300">
+                    <td className="px-6 py-4 text-slate-600">
                       {formatDate(r.started_at)}
                     </td>
                     <td className="px-6 py-4 text-right font-semibold">
@@ -119,11 +123,13 @@ export default function Dashboard() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       {r.completed ? (
-                        <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs">
+                        <span className="px-3 py-1 rounded-full
+                                         bg-emerald-100 text-emerald-600 text-xs">
                           Completed
                         </span>
                       ) : (
-                        <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs">
+                        <span className="px-3 py-1 rounded-full
+                                         bg-amber-100 text-amber-600 text-xs">
                           In Progress
                         </span>
                       )}
@@ -132,7 +138,7 @@ export default function Dashboard() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-slate-400">
+                  <td colSpan={4} className="py-8 text-center text-slate-500">
                     No attempts yet.
                   </td>
                 </tr>
@@ -141,6 +147,7 @@ export default function Dashboard() {
           </table>
         </div>
       </section>
+
     </main>
   );
 }
