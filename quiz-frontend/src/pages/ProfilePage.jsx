@@ -87,31 +87,35 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="flex items-center justify-center h-[60vh] text-slate-300">
+      <div className="flex items-center justify-center h-[60vh] text-slate-500">
         Loading profile…
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen flex items-center justify-center
+                    bg-gradient-to-br from-white via-sky-50 to-sky-100 px-4">
 
-      {/* HEADER */}
-      <div className="mb-10">
-        <h1 className="text-3xl font-bold text-white">
-          Profile
-        </h1>
-        <p className="mt-2 text-sm text-slate-400">
-          Manage your personal details and learning preferences.
-        </p>
-      </div>
+      {/* MAIN CARD */}
+      <div className="w-full max-w-xl rounded-3xl bg-white
+                      border border-sky-200 p-8 shadow-lg">
 
-      {/* CARD */}
-      <div className="max-w-xl rounded-3xl bg-white/5 border border-white/10 p-8 backdrop-blur-xl">
+        {/* HEADER */}
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold text-slate-900">
+            Profile
+          </h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Manage your personal details and learning preferences.
+          </p>
+        </div>
 
         {/* AVATAR */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-28 h-28 rounded-full overflow-hidden border border-white/20 flex items-center justify-center bg-white/10">
+          <div className="w-28 h-28 rounded-full overflow-hidden
+                          border border-sky-300 flex items-center
+                          justify-center bg-sky-50">
             {avatarPreview ? (
               <img
                 src={avatarPreview}
@@ -125,7 +129,10 @@ export default function ProfilePage() {
             )}
           </div>
 
-          <label className="mt-4 cursor-pointer text-sm px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition">
+          <label className="mt-4 cursor-pointer text-sm
+                            px-4 py-2 rounded-lg
+                            bg-sky-100 text-slate-700
+                            hover:bg-sky-200 transition">
             {uploading ? "Uploading…" : "Change Avatar"}
             <input
               type="file"
@@ -138,25 +145,32 @@ export default function ProfilePage() {
 
         {/* FORM */}
         <div className="space-y-6">
+
           <div>
-            <label className="text-xs uppercase text-slate-400">
+            <label className="text-xs uppercase text-slate-500">
               Full Name
             </label>
             <input
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="mt-2 w-full rounded-lg bg-white/10 border border-white/10 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+              className="mt-2 w-full rounded-lg bg-white
+                         border border-sky-200 px-4 py-3
+                         text-slate-800
+                         focus:outline-none focus:ring-2
+                         focus:ring-sky-400"
             />
           </div>
 
           <div>
-            <label className="text-xs uppercase text-slate-400">
+            <label className="text-xs uppercase text-slate-500">
               Preferred Difficulty
             </label>
             <select
               value={preferredDifficulty}
               onChange={(e) => setPreferredDifficulty(e.target.value)}
-              className="mt-2 w-full rounded-lg bg-white/10 border border-white/10 px-4 py-3 text-white focus:outline-none"
+              className="mt-2 w-full rounded-lg bg-white
+                         border border-sky-200 px-4 py-3
+                         text-slate-800 focus:outline-none"
             >
               <option value="">None</option>
               <option value="Easy">Easy</option>
@@ -166,27 +180,33 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label className="text-xs uppercase text-slate-400">
+            <label className="text-xs uppercase text-slate-500">
               Preferred Category
             </label>
             <input
               value={preferredCategory}
               onChange={(e) => setPreferredCategory(e.target.value)}
               placeholder="Python, Java, DBMS"
-              className="mt-2 w-full rounded-lg bg-white/10 border border-white/10 px-4 py-3 text-white focus:outline-none"
+              className="mt-2 w-full rounded-lg bg-white
+                         border border-sky-200 px-4 py-3
+                         text-slate-800 focus:outline-none"
             />
           </div>
+
         </div>
 
         {/* SAVE */}
         <div className="mt-10 flex justify-end">
           <button
             onClick={saveProfile}
-            className="px-6 py-3 rounded-xl bg-cyan-500 text-black font-semibold hover:bg-cyan-400 transition"
+            className="px-6 py-3 rounded-xl
+                       bg-sky-500 text-white font-semibold
+                       hover:bg-sky-600 transition"
           >
             Save Changes
           </button>
         </div>
+
       </div>
     </div>
   );

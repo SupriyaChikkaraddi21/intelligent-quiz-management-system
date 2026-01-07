@@ -27,6 +27,7 @@ export default function Register() {
     try {
       await api.post("/accounts/register/", { name, email, password });
       navigate("/login");
+      localStorage.getItem("email")
     } catch {
       setError("Registration failed. Try another email.");
     }
@@ -40,24 +41,34 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0B1220] via-[#111827] to-[#020617] px-4">
-      <div className="w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-8 text-white">
-        <h2 className="text-3xl font-bold text-center mb-2">Create Account</h2>
-        <p className="text-sm text-slate-400 text-center mb-6">
+    <div className="min-h-screen flex items-center justify-center
+                    bg-gradient-to-br from-white via-sky-50 to-sky-100 px-4">
+
+      <div className="w-full max-w-md bg-white border border-sky-200
+                      rounded-2xl shadow-lg p-8">
+
+        <h2 className="text-3xl font-bold text-center mb-2 text-slate-900">
+          Create Account
+        </h2>
+
+        <p className="text-sm text-slate-600 text-center mb-6">
           Join QuizGen and start learning smarter
         </p>
 
         {error && (
-          <div className="mb-4 text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-md p-2">
+          <div className="mb-4 text-sm text-red-600 bg-red-100
+                          border border-red-300 rounded-md p-2">
             {error}
           </div>
         )}
 
         <form onSubmit={handleRegister} className="space-y-4">
+
           <input
             type="text"
             placeholder="Full name"
-            className="w-full p-3 rounded-lg bg-white/10 border border-white/10 focus:ring-2 focus:ring-cyan-500 outline-none"
+            className="w-full p-3 rounded-lg bg-white border border-sky-200
+                       focus:ring-2 focus:ring-sky-400 outline-none"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -66,7 +77,8 @@ export default function Register() {
           <input
             type="email"
             placeholder="Email address"
-            className="w-full p-3 rounded-lg bg-white/10 border border-white/10 focus:ring-2 focus:ring-cyan-500 outline-none"
+            className="w-full p-3 rounded-lg bg-white border border-sky-200
+                       focus:ring-2 focus:ring-sky-400 outline-none"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -76,15 +88,18 @@ export default function Register() {
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Password"
-              className="w-full p-3 rounded-lg bg-white/10 border border-white/10 pr-10 focus:ring-2 focus:ring-cyan-500 outline-none"
+              className="w-full p-3 rounded-lg bg-white border border-sky-200
+                         pr-10 focus:ring-2 focus:ring-sky-400 outline-none"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-white"
+              className="absolute inset-y-0 right-3 flex items-center
+                         text-slate-400 hover:text-sky-500"
             >
               {showPassword ? (
                 <EyeSlashIcon className="h-5 w-5" />
@@ -94,15 +109,18 @@ export default function Register() {
             </button>
           </div>
 
-          <button className="w-full bg-cyan-500 hover:bg-cyan-600 text-black font-semibold py-3 rounded-lg transition">
+          <button
+            className="w-full bg-sky-500 hover:bg-sky-600 text-white
+                       font-semibold py-3 rounded-lg transition"
+          >
             Register
           </button>
         </form>
 
         <div className="my-6 flex items-center">
-          <div className="flex-1 h-px bg-white/10" />
-          <span className="px-3 text-xs text-slate-400">OR</span>
-          <div className="flex-1 h-px bg-white/10" />
+          <div className="flex-1 h-px bg-sky-200" />
+          <span className="px-3 text-xs text-slate-500">OR</span>
+          <div className="flex-1 h-px bg-sky-200" />
         </div>
 
         <div className="flex justify-center">
@@ -112,12 +130,16 @@ export default function Register() {
           />
         </div>
 
-        <p className="text-center text-sm text-slate-400 mt-6">
+        <p className="text-center text-sm text-slate-600 mt-6">
           Already have an account?{" "}
-          <Link to="/login" className="text-cyan-400 font-medium hover:underline">
+          <Link
+            to="/login"
+            className="text-sky-500 font-medium hover:underline"
+          >
             Login
           </Link>
         </p>
+
       </div>
     </div>
   );

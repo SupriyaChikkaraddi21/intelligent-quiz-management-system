@@ -50,7 +50,7 @@ export default function QuizAttempt() {
     osc.stop(ctx.currentTime + duration);
   };
 
-  // ---------------- LOAD ATTEMPT
+  // LOAD ATTEMPT
   useEffect(() => {
     const load = async () => {
       try {
@@ -82,7 +82,7 @@ export default function QuizAttempt() {
     load();
   }, [attemptId]);
 
-  // ---------------- TIMER
+  // TIMER
   useEffect(() => {
     if (timeLeft === null) return;
 
@@ -159,7 +159,7 @@ export default function QuizAttempt() {
 
   if (loading) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center text-slate-300">
+      <div className="min-h-[70vh] flex items-center justify-center text-slate-500">
         Loading…
       </div>
     );
@@ -168,22 +168,29 @@ export default function QuizAttempt() {
   const q = questions[currentIndex];
 
   return (
-    <div className="w-full min-h-[calc(100vh-64px)] flex justify-center px-6 py-10">
-      <div className="w-full max-w-3xl rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl p-8 text-white">
+    <div className="w-full min-h-[calc(100vh-64px)]
+                    flex justify-center items-start
+                    bg-gradient-to-br from-white via-sky-50 to-sky-100
+                    px-6 py-10">
+
+      <div className="w-full max-w-3xl rounded-3xl bg-white
+                      border border-sky-200 shadow-lg p-8
+                      text-slate-800">
 
         {/* HEADER */}
         <div className="flex justify-between items-center mb-6">
-          <span className="text-sm text-slate-300">
+          <span className="text-sm text-slate-600">
             Question {currentIndex + 1} / {questions.length}
           </span>
 
-          <span className="px-4 py-2 rounded-lg font-semibold bg-blue-500/20 text-blue-300">
+          <span className="px-4 py-2 rounded-lg font-semibold
+                           bg-sky-100 text-sky-700">
             ⏳ {formatTime(timeLeft)}
           </span>
         </div>
 
         {/* QUESTION */}
-        <h2 className="text-xl font-semibold mb-6 text-white">
+        <h2 className="text-xl font-semibold mb-6 text-slate-900">
           {q.question_text}
         </h2>
 
@@ -197,8 +204,8 @@ export default function QuizAttempt() {
               className={`w-full text-left px-5 py-4 rounded-xl border transition
                 ${
                   selected === index
-                    ? "bg-blue-500/20 border-blue-400 ring-2 ring-blue-400/40"
-                    : "bg-white/5 border-white/10 hover:bg-white/10"
+                    ? "bg-sky-100 border-sky-400 ring-2 ring-sky-400/40"
+                    : "bg-white border-sky-200 hover:bg-sky-50"
                 }
                 ${quizLocked ? "opacity-60 cursor-not-allowed" : ""}
               `}
@@ -213,7 +220,9 @@ export default function QuizAttempt() {
           <button
             onClick={goPrev}
             disabled={currentIndex === 0 || quizLocked}
-            className="px-5 py-2 rounded-lg bg-white/10 text-slate-300 disabled:opacity-40"
+            className="px-5 py-2 rounded-lg
+                       bg-slate-100 text-slate-700
+                       disabled:opacity-40"
           >
             Previous
           </button>
@@ -222,7 +231,9 @@ export default function QuizAttempt() {
             <button
               onClick={goNext}
               disabled={quizLocked}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-6 py-2 bg-sky-500
+                         text-white rounded-lg
+                         hover:bg-sky-600"
             >
               Next
             </button>
@@ -230,7 +241,9 @@ export default function QuizAttempt() {
             <button
               onClick={finishQuiz}
               disabled={quizLocked}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              className="px-6 py-2 bg-emerald-500
+                         text-white rounded-lg
+                         hover:bg-emerald-600"
             >
               Finish Quiz
             </button>

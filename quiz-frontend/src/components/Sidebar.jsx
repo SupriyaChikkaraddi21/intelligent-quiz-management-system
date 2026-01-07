@@ -12,7 +12,7 @@ const links = [
 
 export default function Sidebar() {
   return (
-    <aside className="w-64 min-h-screen bg-[#0B1220] border-r border-white/10 px-4 py-6">
+    <aside className="w-64 min-h-screen bg-white border-r border-sky-200 px-4 py-6">
       <nav className="space-y-2">
         {links.map((link) => (
           <NavLink
@@ -21,8 +21,8 @@ export default function Sidebar() {
             className={({ isActive }) =>
               `block px-4 py-3 rounded-lg text-sm transition ${
                 isActive
-                  ? "bg-cyan-500/20 text-cyan-400 font-semibold"
-                  : "text-slate-300 hover:bg-white/10"
+                  ? "bg-sky-100 text-sky-600 font-semibold border border-sky-200"
+                  : "text-slate-600 hover:bg-sky-50"
               }`
             }
           >
@@ -37,7 +37,9 @@ export default function Sidebar() {
             localStorage.removeItem("token");
             window.location.href = "/login";
           }}
-          className="w-full py-2 rounded-lg bg-red-500/20 text-red-400 text-sm hover:bg-red-500/30 transition"
+          className="w-full py-2 rounded-lg
+                     bg-red-100 text-red-600 text-sm
+                     hover:bg-red-200 transition"
         >
           Logout
         </button>
