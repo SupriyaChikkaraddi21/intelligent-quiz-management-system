@@ -1,14 +1,26 @@
+// src/pages/Leaderboard.jsx
 import React, { useEffect, useState } from "react";
 import api from "../api/api";
 
 export default function Leaderboard() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [mode, setMode] = useState("all"); // all | weekly | monthly
+
+  /* ================= LOAD DATA (UNCHANGED) ================= */
 
   useEffect(() => {
     async function load() {
+      setLoading(true);
       try {
-        const res = await api.get("/leaderboard/");
+        const endpoint =
+          mode === "weekly"
+            ? "/leaderboard/weekly/"
+            : mode === "monthly"
+            ? "/leaderboard/monthly/"
+            : "/leaderboard/";
+
+        const res = await api.get(endpoint);
         setRows(res.data || []);
       } catch (err) {
         console.error("Failed to load leaderboard:", err);
@@ -18,11 +30,11 @@ export default function Leaderboard() {
       }
     }
     load();
-  }, []);
+  }, [mode]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-slate-500">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-300">
         Loading leaderboard…
       </div>
     );
@@ -30,114 +42,151 @@ export default function Leaderboard() {
 
   const medals = ["🥇", "🥈", "🥉"];
 
-  // Card background colors for top 3
-  const cardColors = [
-    "bg-yellow-50 border-yellow-300", // Gold
-    "bg-slate-100 border-slate-300",  // Silver
-    "bg-orange-50 border-orange-300", // Bronze
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-sky-100
-                    text-slate-800 px-10 py-10">
+    <div className="relative min-h-screen w-full px-6 py-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.05),_transparent_45%)] pointer-events-none" />
 
-      {/* HEADER */}
-      <div className="mb-12">
-        <h1 className="text-4xl font-bold tracking-tight text-slate-900">
-          Leaderboard
-        </h1>
-        <p className="mt-2 text-slate-600 max-w-2xl">
-          Top performers ranked by average quiz score.
-        </p>
+      <div className="relative w-full space-y-10">
+
+        {/* HEADER */}
+        <section className="space-y-2">
+          <h1 className="text-4xl font-semibold text-white tracking-tight">
+            Leaderboard
+          </h1>
+          <p className="text-slate-400 max-w-2xl">
+            Top performers ranked by total challenge points.
+          </p>
+
+          <div className="pt-4">
+            <Segmented
+              value={mode}
+              options={[
+                { key: "all", label: "All Time" },
+                { key: "weekly", label: "This Week" },
+                { key: "monthly", label: "This Month" },
+              ]}
+              onChange={setMode}
+            />
+          </div>
+        </section>
+
+        {/* PODIUM */}
+        {rows.length > 0 && (
+          <section
+            className={`grid gap-6 ${
+              rows.length === 1
+                ? "grid-cols-1 max-w-md"
+                : rows.length === 2
+                ? "grid-cols-1 md:grid-cols-2 max-w-3xl"
+                : "grid-cols-1 md:grid-cols-3"
+            } mx-auto`}
+          >
+            {rows.slice(0, 3).map((row, idx) => {
+              const points = row.total_points || 0;
+
+              return (
+                <div
+                  key={idx}
+                  className={`relative rounded-2xl bg-white p-6 text-center shadow-lg transition-all ${
+                    idx === 0
+                      ? "ring-2 ring-indigo-500 shadow-xl scale-[1.04]"
+                      : "hover:shadow-xl hover:-translate-y-[2px]"
+                  }`}
+                >
+                  <div className="text-5xl mb-2">{medals[idx]}</div>
+
+                  <p className="text-4xl font-bold text-indigo-600">
+                    {points > 0 ? points : "—"}
+                  </p>
+
+                  <div className="mx-auto my-3 h-[2px] w-10 rounded bg-indigo-200" />
+
+                  <p className="text-xs uppercase text-slate-500">
+                    Total Points
+                  </p>
+
+                  <p className="mt-4 text-sm font-medium text-slate-700 truncate">
+                    {row.display_name || "Unknown User"}
+                  </p>
+
+                  <p className="text-xs uppercase text-slate-400 mt-1">
+                    Rank #{idx + 1}
+                  </p>
+                </div>
+              );
+            })}
+          </section>
+        )}
+
+        {/* FULL TABLE */}
+        <section>
+          <div className="rounded-2xl bg-white shadow overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-100 text-slate-600">
+                <tr>
+                  <th className="px-6 py-3 text-left">Rank</th>
+                  <th className="px-6 py-3 text-left">User</th>
+                  <th className="px-6 py-3 text-right">Total Points</th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y">
+                {rows.map((row, index) => {
+                  const points = row.total_points || 0;
+
+                  return (
+                    <tr
+                      key={index}
+                      className="group cursor-pointer transition-all hover:bg-slate-50 hover:translate-x-[2px]"
+                    >
+                      <td className="px-6 py-4 font-semibold relative">
+                        <span className="absolute left-0 top-0 h-full w-1 bg-indigo-500 opacity-0 group-hover:opacity-100 transition" />
+                        #{index + 1}
+                        {index < 3 && (
+                          <span className="ml-2 text-lg">
+                            {medals[index]}
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="px-6 py-4">
+                        {row.display_name || "Unknown User"}
+                      </td>
+
+                      <td className="px-6 py-4 text-right font-semibold text-indigo-600">
+                        {points > 0 ? points : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
       </div>
+    </div>
+  );
+}
 
-      {/* PODIUM (TOP 3) */}
-      {rows.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-14">
-          {rows.slice(0, 3).map((row, idx) => {
-            const rank = idx + 1;
+/* ================= UI PRIMITIVES ================= */
 
-            return (
-              <div
-                key={idx}
-                className={`rounded-3xl border p-6 shadow-md
-                            ${cardColors[idx]}`}
-              >
-                {/* MEDAL */}
-                <div className="text-center text-6xl mb-3">
-                  {medals[idx]}
-                </div>
-
-                <div className="text-center text-sm text-slate-500 mb-1">
-                  Rank #{rank}
-                </div>
-
-                <div className="text-center text-xl font-semibold mb-2">
-                  {row.username ||
-                    row.user__username ||
-                    row.user ||
-                    "Unknown User"}
-                </div>
-
-                <div className="text-center text-4xl font-bold text-sky-600">
-                  {Math.round(row.avg_score || 0)}%
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* FULL TABLE */}
-      <div className="rounded-3xl bg-white border border-sky-200
-                      shadow-md overflow-hidden">
-
-        <table className="w-full text-sm">
-          <thead className="bg-sky-50">
-            <tr>
-              <th className="px-6 py-4 text-left text-xs uppercase text-slate-600">
-                Rank
-              </th>
-              <th className="px-6 py-4 text-left text-xs uppercase text-slate-600">
-                User
-              </th>
-              <th className="px-6 py-4 text-right text-xs uppercase text-slate-600">
-                Average Score
-              </th>
-            </tr>
-          </thead>
-
-          <tbody className="divide-y divide-sky-200">
-            {rows.map((row, index) => (
-              <tr
-                key={index}
-                className="hover:bg-sky-50 transition"
-              >
-                <td className="px-6 py-4 font-semibold">
-                  #{index + 1}
-                  {index < 3 && (
-                    <span className="ml-2 text-xl">
-                      {medals[index]}
-                    </span>
-                  )}
-                </td>
-
-                <td className="px-6 py-4">
-                  {row.username ||
-                    row.user__username ||
-                    row.user ||
-                    "Unknown User"}
-                </td>
-
-                <td className="px-6 py-4 text-right font-semibold text-sky-600">
-                  {Math.round(row.avg_score || 0)}%
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-      </div>
+function Segmented({ value, options, onChange }) {
+  return (
+    <div className="inline-flex rounded-xl bg-slate-700/50 p-1">
+      {options.map((o) => (
+        <button
+          key={o.key}
+          onClick={() => onChange(o.key)}
+          className={`px-4 py-2 rounded-lg text-sm transition-all ${
+            value === o.key
+              ? "bg-white text-slate-900 shadow"
+              : "text-slate-300 hover:text-white"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
     </div>
   );
 }

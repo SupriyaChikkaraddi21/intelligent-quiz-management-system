@@ -1,4 +1,3 @@
-// src/pages/ProfilePage.jsx
 import React, { useEffect, useState } from "react";
 import api from "../api/api";
 
@@ -10,11 +9,14 @@ export default function ProfilePage() {
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
 
+  const API_BASE = "http://localhost:8000";
+
   const toAbsoluteUrl = (url) => {
     if (!url) return null;
     if (url.startsWith("http")) return url;
-    return `${window.location.origin}${url}`;
+    return `${API_BASE}${url}`;
   };
+
 
   const loadProfile = async () => {
     try {
@@ -94,28 +96,42 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center
-                    bg-gradient-to-br from-white via-sky-50 to-sky-100 px-4">
+    <div className="relative min-h-screen flex items-center justify-center px-4
+                    bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
 
-      {/* MAIN CARD */}
-      <div className="w-full max-w-xl rounded-3xl bg-white
-                      border border-sky-200 p-8 shadow-lg">
+      {/* ambient */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.06),_transparent_45%)] pointer-events-none" />
 
+      {/* CARD */}
+      <div
+        className="
+          relative w-full max-w-xl
+          rounded-3xl bg-white p-8
+          shadow-xl
+          transition-all duration-300
+        "
+      >
         {/* HEADER */}
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-slate-900">
+        <div className="mb-10 text-center">
+          <h1 className="text-3xl font-semibold text-slate-900">
             Profile
           </h1>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-slate-500">
             Manage your personal details and learning preferences.
           </p>
         </div>
 
         {/* AVATAR */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-28 h-28 rounded-full overflow-hidden
-                          border border-sky-300 flex items-center
-                          justify-center bg-sky-50">
+        <div className="flex flex-col items-center mb-10">
+          <div
+            className="
+              relative w-28 h-28 rounded-full overflow-hidden
+              bg-slate-100
+              ring-2 ring-sky-200
+              transition-all duration-300
+              hover:ring-sky-400 hover:shadow-lg hover:-translate-y-1
+            "
+          >
             {avatarPreview ? (
               <img
                 src={avatarPreview}
@@ -123,16 +139,22 @@ export default function ProfilePage() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="text-slate-400 text-sm">
+              <div className="w-full h-full flex items-center justify-center text-sm text-slate-400">
                 No Avatar
-              </span>
+              </div>
             )}
           </div>
 
-          <label className="mt-4 cursor-pointer text-sm
-                            px-4 py-2 rounded-lg
-                            bg-sky-100 text-slate-700
-                            hover:bg-sky-200 transition">
+          <label
+            className="
+              mt-4 cursor-pointer
+              text-sm font-medium
+              px-4 py-2 rounded-lg
+              bg-sky-100 text-sky-700
+              hover:bg-sky-200
+              transition
+            "
+          >
             {uploading ? "Uploading…" : "Change Avatar"}
             <input
               type="file"
@@ -146,52 +168,35 @@ export default function ProfilePage() {
         {/* FORM */}
         <div className="space-y-6">
 
-          <div>
-            <label className="text-xs uppercase text-slate-500">
-              Full Name
-            </label>
+          <Field label="Full Name">
             <input
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="mt-2 w-full rounded-lg bg-white
-                         border border-sky-200 px-4 py-3
-                         text-slate-800
-                         focus:outline-none focus:ring-2
-                         focus:ring-sky-400"
+              className="input"
             />
-          </div>
+          </Field>
 
-          <div>
-            <label className="text-xs uppercase text-slate-500">
-              Preferred Difficulty
-            </label>
+          <Field label="Preferred Difficulty">
             <select
               value={preferredDifficulty}
               onChange={(e) => setPreferredDifficulty(e.target.value)}
-              className="mt-2 w-full rounded-lg bg-white
-                         border border-sky-200 px-4 py-3
-                         text-slate-800 focus:outline-none"
+              className="input"
             >
               <option value="">None</option>
               <option value="Easy">Easy</option>
               <option value="Medium">Medium</option>
               <option value="Hard">Hard</option>
             </select>
-          </div>
+          </Field>
 
-          <div>
-            <label className="text-xs uppercase text-slate-500">
-              Preferred Category
-            </label>
+          <Field label="Preferred Category">
             <input
               value={preferredCategory}
               onChange={(e) => setPreferredCategory(e.target.value)}
               placeholder="Python, Java, DBMS"
-              className="mt-2 w-full rounded-lg bg-white
-                         border border-sky-200 px-4 py-3
-                         text-slate-800 focus:outline-none"
+              className="input"
             />
-          </div>
+          </Field>
 
         </div>
 
@@ -199,15 +204,53 @@ export default function ProfilePage() {
         <div className="mt-10 flex justify-end">
           <button
             onClick={saveProfile}
-            className="px-6 py-3 rounded-xl
-                       bg-sky-500 text-white font-semibold
-                       hover:bg-sky-600 transition"
+            className="
+              px-6 py-3 rounded-xl
+              bg-sky-500 text-white font-semibold
+              shadow-md
+              hover:bg-sky-600 hover:shadow-lg hover:-translate-y-[1px]
+              active:scale-[0.98]
+              transition-all
+            "
           >
             Save Changes
           </button>
         </div>
-
       </div>
+
+      {/* styles */}
+      <style>
+        {`
+          .input {
+            margin-top: 0.5rem;
+            width: 100%;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            color: #0f172a;
+            outline: none;
+            transition: all 0.2s ease;
+          }
+          .input:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56,189,248,0.25);
+          }
+        `}
+      </style>
+    </div>
+  );
+}
+
+/* ---------- SMALL WRAPPER ---------- */
+
+function Field({ label, children }) {
+  return (
+    <div>
+      <label className="text-xs uppercase tracking-widest text-slate-500">
+        {label}
+      </label>
+      {children}
     </div>
   );
 }

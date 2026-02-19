@@ -1,24 +1,63 @@
-// src/pages/QuizAttempt.jsx
 import React, { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import api from "../api/api";
 
 export default function QuizAttempt() {
   const { attemptId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
+  const fallbackLang =
+    new URLSearchParams(location.search).get("lang") || "en";
+
+  const [lang, setLang] = useState(fallbackLang);
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selected, setSelected] = useState(null);
-  const [answerMap, setAnswerMap] = useState({});
-  const [timeLeft, setTimeLeft] = useState(null);
 
-  const [showTimeoutModal, setShowTimeoutModal] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [textAnswer, setTextAnswer] = useState("");
+  const [answerMap, setAnswerMap] = useState({});
+
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [quizMode, setQuizMode] = useState("challenge");
   const [quizLocked, setQuizLocked] = useState(false);
+
+  const [visibleHints, setVisibleHints] = useState({});
 
   const timerRef = useRef(null);
   const audioCtxRef = useRef(null);
+  const initializedTimer = useRef(false);
+
+  /* ================= UTIL ================= */
+
+  const formatTime = (seconds) => {
+    if (seconds === null || seconds < 0) return "0:00";
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  const timerStyle = () => {
+    if (timeLeft <= 30) return "bg-red-600";
+    if (timeLeft <= 90) return "bg-amber-500";
+    return "bg-sky-600";
+  };
+
+  const toggleHint = async (qid) => {
+    if (visibleHints[qid]) {
+      setVisibleHints((p) => ({ ...p, [qid]: false }));
+      return;
+    }
+    try {
+      await api.post(`/attempt/${attemptId}/use_hint/`);
+      setVisibleHints((p) => ({ ...p, [qid]: true }));
+    } catch (err) {
+      alert(err.response?.data?.error || "Not enough points");
+    }
+  };
+
+  /* ================= AUDIO ================= */
 
   const initAudio = () => {
     if (!audioCtxRef.current) {
@@ -27,229 +66,304 @@ export default function QuizAttempt() {
     }
   };
 
-  const beep = (frequency = 1200, duration = 0.12) => {
+  const beep = () => {
+    if (quizMode === "practice") return;
     const ctx = audioCtxRef.current;
     if (!ctx) return;
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-
-    osc.type = "sine";
-    osc.frequency.value = frequency;
-
+    osc.frequency.value = 1200;
     gain.gain.setValueAtTime(0.2, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(
-      0.001,
-      ctx.currentTime + duration
-    );
-
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
     osc.connect(gain);
     gain.connect(ctx.destination);
-
     osc.start();
-    osc.stop(ctx.currentTime + duration);
+    osc.stop(ctx.currentTime + 0.15);
   };
 
-  // LOAD ATTEMPT
+  /* ================= LOAD ================= */
+
   useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await api.get(`/attempt/${attemptId}/details/`);
-        const data = res.data;
+  async function load() {
+    try {
+      const res = await api.get(`/attempt/${attemptId}/details/`);
+      const data = res.data;
 
-        setQuestions(data.questions);
+      console.log("Attempt details:", data);
 
-        const map = {};
-        data.questions.forEach((q) => (map[q.question_id] = q.selected));
-        setAnswerMap(map);
+      const questionList = data.questions || [];
 
-        if (data.questions.length > 0) {
-          setSelected(map[data.questions[0].question_id] ?? null);
-        }
-
-        const start = new Date(data.started_at).getTime();
-        const elapsed = Math.floor((Date.now() - start) / 1000);
-        const remain = data.time_limit - elapsed;
-
-        setTimeLeft(remain > 0 ? remain : 0);
+      if (!questionList.length) {
+        alert("No questions found for this attempt");
         setLoading(false);
-      } catch (err) {
-        console.error(err);
-        alert("Failed to load quiz.");
+        return;
       }
-    };
 
-    load();
-  }, [attemptId]);
+      setLang(data.language || fallbackLang);
+      setQuestions(questionList);
+      setQuizMode(data.quiz_mode || "challenge");
 
-  // TIMER
+      const map = {};
+      questionList.forEach((q) => {
+        map[q.question_id] =
+          q.question_type === "type_answer"
+            ? q.text_answer || ""
+            : q.selected ?? null;
+      });
+
+      setAnswerMap(map);
+
+      const first = questionList[0];
+
+      if (first.question_type === "type_answer") {
+        setTextAnswer(map[first.question_id] || "");
+      } else {
+        setSelected(map[first.question_id] ?? null);
+      }
+
+      if (data.quiz_mode !== "practice" && !initializedTimer.current) {
+        if (data.started_at && data.time_limit) {
+          const start = new Date(data.started_at).getTime();
+          const elapsed = Math.floor((Date.now() - start) / 1000);
+          setTimeLeft(Math.max(data.time_limit - elapsed, 0));
+          initializedTimer.current = true;
+        }
+      }
+
+      setLoading(false);
+
+    } catch (err) {
+      console.error("Attempt load error:", err);
+      alert("Failed to load quiz");
+      setLoading(false);
+    }
+  }
+
+  load();
+}, [attemptId, fallbackLang]);
+
+  /* ================= TIMER ================= */
+
   useEffect(() => {
-    if (timeLeft === null) return;
+    if (quizMode === "practice" || timeLeft === null || quizLocked) return;
 
     if (timeLeft <= 0) {
-      handleTimeout();
+      clearInterval(timerRef.current);
+      setQuizLocked(true);
+      api.post(`/attempt/${attemptId}/finish/`);
+      navigate(`/results/${attemptId}?timeout=1`);
       return;
     }
 
-    if (timeLeft === 10) beep(800);
-    if (timeLeft === 5) beep(1200);
-    if (timeLeft <= 4 && timeLeft >= 1) beep(1500);
+    if (timeLeft <= 5) {
+      initAudio();
+      beep();
+    }
 
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
+    timerRef.current = setInterval(
+      () => setTimeLeft((p) => p - 1),
+      1000
+    );
 
     return () => clearInterval(timerRef.current);
-  }, [timeLeft]);
+  }, [timeLeft, quizMode, quizLocked]);
 
-  const formatTime = (sec) => {
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  };
-
-  const handleTimeout = async () => {
-    clearInterval(timerRef.current);
-    setQuizLocked(true);
-    setShowTimeoutModal(true);
-
-    setTimeout(async () => {
-      await api.post(`/attempt/${attemptId}/finish/`, { timeout: true });
-      navigate(`/results/${attemptId}?timeout=1`);
-    }, 2000);
-  };
-
-  const saveAnswer = async (questionId, choiceIndex) => {
-    await api.post(`/attempt/${attemptId}/answer/`, {
-      question_id: questionId,
-      selected: Number(choiceIndex),
-    });
-    setAnswerMap((p) => ({ ...p, [questionId]: choiceIndex }));
-  };
+  /* ================= ANSWERS ================= */
 
   const handleSelect = (index) => {
     if (quizLocked) return;
     initAudio();
     const q = questions[currentIndex];
     setSelected(index);
-    saveAnswer(q.question_id, index);
+    api.post(`/attempt/${attemptId}/answer/`, {
+      question_id: q.question_id,
+      selected: index,
+    });
   };
 
-  const goNext = () => {
-    if (currentIndex < questions.length - 1) {
-      const next = currentIndex + 1;
-      setCurrentIndex(next);
-      setSelected(answerMap[questions[next].question_id] ?? null);
+  const handleTextSubmit = () => {
+    if (quizLocked) return;
+    const q = questions[currentIndex];
+    api.post(`/attempt/${attemptId}/answer/`, {
+      question_id: q.question_id,
+      text_answer: textAnswer,
+    });
+  };
+
+  /* ================= NAV ================= */
+
+  const goNext = async () => {
+    if (currentIndex === questions.length - 1) {
+      clearInterval(timerRef.current);
+      setQuizLocked(true);
+      await api.post(`/attempt/${attemptId}/finish/`);
+      navigate(`/results/${attemptId}?mode=${quizMode}`);
+      return;
     }
+
+    const next = currentIndex + 1;
+    const nextQ = questions[next];
+    setCurrentIndex(next);
+    setSelected(
+      nextQ.question_type === "type_answer"
+        ? null
+        : answerMap[nextQ.question_id] ?? null
+    );
+    setTextAnswer(answerMap[nextQ.question_id] || "");
   };
 
   const goPrev = () => {
-    if (currentIndex > 0) {
-      const prev = currentIndex - 1;
-      setCurrentIndex(prev);
-      setSelected(answerMap[questions[prev].question_id] ?? null);
-    }
+    if (currentIndex === 0) return;
+    const prev = currentIndex - 1;
+    const prevQ = questions[prev];
+    setCurrentIndex(prev);
+    setSelected(
+      prevQ.question_type === "type_answer"
+        ? null
+        : answerMap[prevQ.question_id] ?? null
+    );
+    setTextAnswer(answerMap[prevQ.question_id] || "");
   };
 
-  const finishQuiz = async () => {
-    clearInterval(timerRef.current);
-    await api.post(`/attempt/${attemptId}/finish/`);
-    navigate(`/results/${attemptId}`);
-  };
+  /* ================= UI ================= */
 
   if (loading) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center text-slate-500">
-        Loading…
+      <div className="min-h-[70vh] flex items-center justify-center text-slate-400">
+        Loading quiz…
       </div>
     );
   }
 
   const q = questions[currentIndex];
+  const progress =
+    ((currentIndex + 1) / questions.length) * 100;
 
   return (
-    <div className="w-full min-h-[calc(100vh-64px)]
-                    flex justify-center items-start
-                    bg-gradient-to-br from-white via-sky-50 to-sky-100
-                    px-6 py-10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex justify-center px-6 py-10">
+      <div
+        key={currentIndex}
+        className="w-full max-w-3xl bg-white rounded-3xl shadow-xl p-8
+                   transition-all duration-300 ease-out
+                   animate-[fadeSlide_0.25s_ease-out]"
+      >
+        {/* TOP */}
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-slate-500">
+              Question {currentIndex + 1} of {questions.length}
+            </span>
 
-      <div className="w-full max-w-3xl rounded-3xl bg-white
-                      border border-sky-200 shadow-lg p-8
-                      text-slate-800">
+            {quizMode !== "practice" && (
+              <span
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold text-white shadow ${timerStyle()}`}
+              >
+                ⏱ Time remaining · {formatTime(timeLeft)}
+              </span>
+            )}
+          </div>
 
-        {/* HEADER */}
-        <div className="flex justify-between items-center mb-6">
-          <span className="text-sm text-slate-600">
-            Question {currentIndex + 1} / {questions.length}
-          </span>
-
-          <span className="px-4 py-2 rounded-lg font-semibold
-                           bg-sky-100 text-sky-700">
-            ⏳ {formatTime(timeLeft)}
-          </span>
+          <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-sky-500 transition-all"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
 
         {/* QUESTION */}
-        <h2 className="text-xl font-semibold mb-6 text-slate-900">
+        <h2 className="text-xl font-semibold text-slate-900 mb-5">
           {q.question_text}
         </h2>
 
-        {/* OPTIONS */}
-        <div className="space-y-3">
-          {q.choices.map((choice, index) => (
+        {/* HINT */}
+        {quizMode === "practice" && q.hint && (
+          <div className="mb-6">
             <button
-              key={index}
-              onClick={() => handleSelect(index)}
-              disabled={quizLocked}
-              className={`w-full text-left px-5 py-4 rounded-xl border transition
-                ${
-                  selected === index
-                    ? "bg-sky-100 border-sky-400 ring-2 ring-sky-400/40"
-                    : "bg-white border-sky-200 hover:bg-sky-50"
-                }
-                ${quizLocked ? "opacity-60 cursor-not-allowed" : ""}
-              `}
+              onClick={() => toggleHint(q.question_id)}
+              className="px-4 py-1.5 rounded-lg bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition"
             >
-              {choice}
+              💡 {visibleHints[q.question_id] ? "Hide Hint" : "Show Hint"}
             </button>
-          ))}
-        </div>
 
-        {/* CONTROLS */}
+            {visibleHints[q.question_id] && (
+              <div className="mt-3 p-4 rounded-xl bg-yellow-50 border border-yellow-300 text-sm">
+                {q.hint}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ANSWERS */}
+        {q.question_type !== "type_answer" ? (
+          <div className="space-y-3">
+            {q.choices.map((choice, index) => (
+              <button
+                key={index}
+                onClick={() => handleSelect(index)}
+                className={`
+                  w-full text-left px-5 py-4 rounded-xl border transition-all
+                  ${
+                    selected === index
+                      ? "bg-sky-500/90 text-white border-sky-500 shadow-lg scale-[1.01]"
+                      : "bg-white border-slate-300 shadow-sm hover:shadow-md hover:-translate-y-[1px]"
+                  }
+                `}
+              >
+                {choice}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <input
+              value={textAnswer}
+              onChange={(e) => setTextAnswer(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-sky-400"
+              placeholder="Type your answer…"
+            />
+            <button
+              onClick={handleTextSubmit}
+              className="px-6 py-2.5 rounded-xl bg-sky-500 text-white font-semibold hover:bg-sky-600 transition"
+            >
+              Save Answer
+            </button>
+          </div>
+        )}
+
+        {/* NAV */}
         <div className="flex justify-between mt-10">
           <button
             onClick={goPrev}
-            disabled={currentIndex === 0 || quizLocked}
-            className="px-5 py-2 rounded-lg
-                       bg-slate-100 text-slate-700
-                       disabled:opacity-40"
+            disabled={currentIndex === 0}
+            className="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-40 transition"
           >
             Previous
           </button>
 
-          {currentIndex < questions.length - 1 ? (
-            <button
-              onClick={goNext}
-              disabled={quizLocked}
-              className="px-6 py-2 bg-sky-500
-                         text-white rounded-lg
-                         hover:bg-sky-600"
-            >
-              Next
-            </button>
-          ) : (
-            <button
-              onClick={finishQuiz}
-              disabled={quizLocked}
-              className="px-6 py-2 bg-emerald-500
-                         text-white rounded-lg
-                         hover:bg-emerald-600"
-            >
-              Finish Quiz
-            </button>
-          )}
+          <button
+            onClick={goNext}
+            className={`px-7 py-3 rounded-xl font-semibold shadow transition
+              ${
+                currentIndex === questions.length - 1
+                  ? "bg-emerald-600 text-white hover:bg-emerald-700 scale-[1.02]"
+                  : "bg-sky-600 text-white hover:bg-sky-700"
+              }
+            `}
+          >
+            {currentIndex === questions.length - 1 ? "Finish Quiz" : "Next"}
+          </button>
         </div>
       </div>
+
+      {/* animation */}
+      <style>{`
+        @keyframes fadeSlide {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }

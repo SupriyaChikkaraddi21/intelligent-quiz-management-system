@@ -1,18 +1,35 @@
 # core/urls.py
+
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+    # ================= ADMIN =================
     path("admin/", admin.site.urls),
 
-    # accounts
-    path("api/accounts/", include("accounts.urls")),
+    # ================= API v1 =================
+    # Accounts App
+    path("api/v1/accounts/", include("accounts.urls")),
 
-    # quiz app
-    path("api/", include("quiz.urls")),
+    # Quiz App
+    path("api/v1/", include("quiz.urls")),
+
+    # Gamification App
+    path("api/v1/", include("gamification.urls")),
+
+    # Leaderboard App
+    path("api/v1/", include("leaderboard.urls")),
+
+    # Classroom App
+    path("api/v1/", include("classroom.urls")),
 ]
 
+
+# ================= MEDIA FILES =================
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(
+        settings.MEDIA_URL,
+        document_root=settings.MEDIA_ROOT
+    )

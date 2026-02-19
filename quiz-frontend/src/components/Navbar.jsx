@@ -1,4 +1,3 @@
-// src/components/Navbar.jsx
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -11,6 +10,7 @@ export default function Navbar() {
     "/dashboard": "Dashboard",
     "/select": "Create Quiz",
     "/leaderboard": "Leaderboard",
+    "/rewards": "Rewards", // 🔥 ADDED
     "/progress": "Progress",
     "/analytics": "Analytics",
     "/profile": "Profile",
@@ -41,7 +41,7 @@ export default function Navbar() {
 
         {/* RIGHT — EMPTY (reserved for future) */}
         <div />
-        
+
       </div>
     </header>
   );

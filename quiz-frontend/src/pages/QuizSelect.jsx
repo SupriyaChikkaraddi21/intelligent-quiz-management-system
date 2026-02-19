@@ -1,3 +1,4 @@
+// src/pages/QuizSelect.jsx
 import React, { useEffect, useState } from "react";
 import api from "../api/api";
 import { useNavigate } from "react-router-dom";
@@ -9,28 +10,42 @@ export default function QuizSelect() {
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
 
+  const [userQuizzes, setUserQuizzes] = useState([]);
+  const [showUserQuizzes, setShowUserQuizzes] = useState(false);
+
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState(null);
 
+  const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState("medium");
+  const [recommendedDifficulty, setRecommendedDifficulty] = useState(null);
+
   const [count, setCount] = useState(5);
+  const [quizMode, setQuizMode] = useState("challenge");
+  const [questionType, setQuestionType] = useState("mcq");
+  const [language, setLanguage] = useState("en");
 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        const groupRes = await api.get("/category-groups/");
-        const catRes = await api.get("/categories/");
-        const subRes = await api.get("/subcategories/");
+        const [g, c, s, uq, rec] = await Promise.all([
+          api.get("/category-groups/"),
+          api.get("/categories/"),
+          api.get("/subcategories/"),
+          api.get("/quiz/my_quizzes/").catch(() => ({ data: [] })),
+          api.get("/user/difficulty/").catch(() => ({ data: null })),
+        ]);
 
-        setGroups(groupRes.data || []);
-        setCategories(catRes.data || []);
-        setSubcategories(subRes.data || []);
+        setGroups(Array.isArray(g.data) ? g.data : []);
+        setCategories(Array.isArray(c.data) ? c.data : []);
+        setSubcategories(Array.isArray(s.data) ? s.data : []);
+        setUserQuizzes(Array.isArray(uq.data) ? uq.data : []);
+        setRecommendedDifficulty(rec.data?.difficulty || null);
       } catch (err) {
-        console.error("Load error:", err);
-        alert("Failed to load quiz data");
+        console.error("Initial load failed:", err);
       } finally {
         setLoading(false);
       }
@@ -38,203 +53,340 @@ export default function QuizSelect() {
     load();
   }, []);
 
-  const filteredCategories = selectedGroup
-    ? categories.filter((c) =>
-        groups
-          .find((g) => g.id === selectedGroup)
-          ?.categories.some((gc) => gc.id === c.id)
-      )
-    : [];
+  const filteredCategories =
+    selectedGroup && Array.isArray(groups)
+      ? categories.filter((c) =>
+          groups
+            .find((g) => String(g.id) === String(selectedGroup))
+            ?.categories?.some((gc) => String(gc.id) === String(c.id))
+        )
+      : [];
 
-  const filteredSubs = subcategories.filter(
-    (s) => String(s.category) === String(selectedCategory)
-  );
+  const filteredSubs =
+    selectedCategory && Array.isArray(subcategories)
+      ? subcategories.filter(
+          (s) => String(s.category) === String(selectedCategory)
+        )
+      : [];
 
-  async function generateQuiz() {
-    if (!selectedCategory) {
-      alert("Please select a category");
+  async function startQuiz() {
+    if (!topic.trim() && !selectedCategory) {
+      alert("Enter a topic OR select a category");
       return;
     }
 
     try {
-      const gen = await api.post("/quiz/generate/", {
-        category: selectedCategory,
-        subcategory: selectedSubcategory,
-        difficulty: difficulty.toLowerCase(),
+      const payload = {
+        difficulty,
         count,
+        question_type: questionType,
+        language,
+      };
+
+      if (topic.trim()) {
+        payload.topic = topic.trim();
+      } else {
+        payload.category = selectedCategory;
+        payload.subcategory = selectedSubcategory;
+      }
+
+      const gen = await api.post("/quiz/generate/", payload);
+
+      const start = await api.post("/attempt/start/", {
+        quiz_id: gen.data.quiz_id,
+        mode: quizMode,
+        language,
       });
 
-      const quizId = gen.data.quiz_id;
-      if (!quizId) {
-        alert("Quiz generation failed");
-        return;
-      }
-
-      const start = await api.post(`/quiz/${quizId}/start/`);
-      const attemptId = start.data?.attempt?.id;
-
-      if (!attemptId) {
-        alert("Failed to start quiz");
-        return;
-      }
-
-      navigate(`/attempt/${attemptId}`);
+      navigate(`/attempt/${start.data.attempt_id}`);
     } catch (err) {
-      console.error("Quiz error:", err);
-      alert("Quiz generation failed");
+      console.error(err);
+      alert("Failed to start quiz");
     }
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-slate-500">
-        Loading quiz setup…
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-300">
+        Loading…
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-sky-100
-                    text-slate-800 px-10 py-10">
+    <main className="relative min-h-screen w-full px-6 py-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.05),_transparent_40%)] pointer-events-none" />
 
-      {/* HEADER */}
-      <div className="mb-12">
-        <h1 className="text-4xl font-bold tracking-tight text-slate-900">
-          Create Your Quiz
-        </h1>
-        <p className="mt-2 text-slate-600 max-w-2xl">
-          Choose a category, difficulty, and question count to begin.
-        </p>
-      </div>
+      <div className="relative w-full space-y-10">
 
-      <div className="max-w-4xl space-y-12">
+        {/* HEADER */}
+        <section className="space-y-3">
+          <h1 className="text-4xl font-semibold text-white tracking-tight">
+            Quiz Center
+          </h1>
+          <p className="text-slate-400 text-sm">
+            Configure and generate your AI quiz.
+          </p>
 
-        {/* STEP 1 — CATEGORY GROUP */}
-        <section>
-          <h2 className="text-xl font-semibold mb-4">1. Category Group</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {groups.map((g) => (
-              <button
-                key={g.id}
-                onClick={() => {
-                  setSelectedGroup(g.id);
-                  setSelectedCategory(null);
-                  setSelectedSubcategory(null);
-                }}
-                className={`rounded-2xl p-5 text-left border transition
-                ${
-                  selectedGroup === g.id
-                    ? "bg-sky-100 border-sky-400 shadow-md"
-                    : "bg-white border-sky-200 hover:bg-sky-50"
-                }`}
-              >
-                <div className="text-lg font-medium">{g.name}</div>
-                <div className="text-sm text-slate-600 mt-1">
-                  Select quizzes from this group
-                </div>
-              </button>
-            ))}
+          <div className="pt-4 flex gap-4">
+            <PrimaryButton
+              large
+              onClick={() => navigate("/create-quiz")}
+            >
+              + Create Quiz
+            </PrimaryButton>
           </div>
         </section>
 
-        {/* STEP 2 — CATEGORY */}
-        {selectedGroup && (
-          <section>
-            <h2 className="text-xl font-semibold mb-4">2. Category</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {filteredCategories.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => {
-                    setSelectedCategory(c.id);
-                    setSelectedSubcategory(null);
-                  }}
-                  className={`rounded-2xl p-4 text-left border transition
-                  ${
-                    selectedCategory === c.id
-                      ? "bg-sky-100 border-emerald-400"
-                      : "bg-white border-sky-200 hover:bg-sky-50"
-                  }`}
-                >
-                  {c.name}
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* STEP 3 — SUBCATEGORY */}
-        {selectedCategory && (
-          <section>
-            <h2 className="text-xl font-semibold mb-4">
-              3. Subcategory <span className="text-sm text-slate-500">(optional)</span>
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {filteredSubs.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setSelectedSubcategory(s.id)}
-                  className={`rounded-2xl p-4 text-left border transition
-                  ${
-                    selectedSubcategory === s.id
-                      ? "bg-sky-100 border-purple-400"
-                      : "bg-white border-sky-200 hover:bg-sky-50"
-                  }`}
-                >
-                  {s.name}
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* STEP 4 — DIFFICULTY */}
-        <section>
-          <h2 className="text-xl font-semibold mb-4">4. Difficulty</h2>
-          <div className="flex gap-4">
-            {["easy", "medium", "hard"].map((lvl) => (
-              <button
-                key={lvl}
-                onClick={() => setDifficulty(lvl)}
-                className={`px-6 py-3 rounded-full uppercase text-sm tracking-wide transition
-                ${
-                  difficulty === lvl
-                    ? "bg-sky-500 text-white font-semibold"
-                    : "bg-white border border-sky-200 text-slate-600 hover:bg-sky-50"
-                }`}
-              >
-                {lvl}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* STEP 5 — QUESTION COUNT */}
-        <section>
-          <h2 className="text-xl font-semibold mb-4">5. Number of Questions</h2>
+        {/* SEARCH */}
+        <Card>
+          <Label>Search Topic (AI)</Label>
           <input
-            type="number"
-            min={1}
-            max={50}
-            value={count}
-            onChange={(e) => setCount(Math.max(1, Number(e.target.value)))}
-            className="w-full bg-white border border-sky-200 rounded-xl
-                       px-4 py-3 text-slate-800"
+            type="text"
+            value={topic}
+            onChange={(e) => {
+              setTopic(e.target.value);
+              setSelectedCategory(null);
+              setSelectedSubcategory(null);
+            }}
+            placeholder="Example: Data Structures, Operating Systems..."
+            className="w-full rounded-xl border border-slate-300 px-5 py-4 bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-all duration-200"
           />
-        </section>
+        </Card>
 
-        {/* CTA */}
-        <section className="pt-6">
-          <button
-            onClick={generateQuiz}
-            className="w-full py-4 rounded-2xl text-lg font-semibold
-                       bg-sky-500 text-white hover:bg-sky-600 transition"
-          >
-            Generate & Start Quiz
-          </button>
-        </section>
+        <div className="grid md:grid-cols-2 gap-6">
+
+          {/* LEFT */}
+          <div className="space-y-6">
+
+            <Card>
+              <Label>Language</Label>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="w-full rounded-xl border border-slate-300 px-5 py-4 bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition"
+              >
+                <option value="en">English</option>
+                <option value="kn">Kannada</option>
+              </select>
+            </Card>
+
+            <Card>
+              <Label>Quiz Mode</Label>
+              <Segmented
+                value={quizMode}
+                options={[
+                  { key: "challenge", label: "🔥 Challenge" },
+                  { key: "practice", label: "🧠 Practice" },
+                ]}
+                onChange={setQuizMode}
+              />
+            </Card>
+
+            <Card>
+              <Label>Question Type</Label>
+              <Segmented
+                value={questionType}
+                options={[
+                  { key: "mcq", label: "MCQ" },
+                  { key: "true_false", label: "TRUE / FALSE" },
+                  { key: "type_answer", label: "TYPE ANSWER" },
+                ]}
+                onChange={setQuestionType}
+              />
+            </Card>
+
+            <Card>
+              <Label>Difficulty</Label>
+              {recommendedDifficulty && (
+                <p className="text-xs text-indigo-600 mb-2 font-medium">
+                  Recommended: {recommendedDifficulty}
+                </p>
+              )}
+              <Segmented
+                value={difficulty}
+                options={[
+                  { key: "easy", label: "Easy" },
+                  { key: "medium", label: "Medium" },
+                  { key: "hard", label: "Hard" },
+                ]}
+                onChange={setDifficulty}
+              />
+            </Card>
+
+            <Card>
+              <Label>Number of Questions</Label>
+              <input
+                type="number"
+                min={1}
+                max={50}
+                value={count}
+                onChange={(e) => setCount(Number(e.target.value))}
+                className="w-full rounded-xl border border-slate-300 px-5 py-4 bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition"
+              />
+            </Card>
+          </div>
+
+          {/* RIGHT */}
+          <div className="space-y-6">
+
+            <Card>
+              <Label>Category Group</Label>
+              <div className="grid grid-cols-2 gap-3">
+                {groups.length === 0 && (
+                  <p className="text-slate-400 text-sm">No category groups found</p>
+                )}
+                {groups.map((g) => (
+                  <Tile
+                    key={g.id}
+                    active={selectedGroup === g.id}
+                    onClick={() => {
+                      setSelectedGroup(g.id);
+                      setSelectedCategory(null);
+                      setSelectedSubcategory(null);
+                      setTopic("");
+                    }}
+                  >
+                    {g.name}
+                  </Tile>
+                ))}
+              </div>
+            </Card>
+
+            {selectedGroup && (
+              <Card>
+                <Label>Category</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {filteredCategories.map((c) => (
+                    <Tile
+                      key={c.id}
+                      active={selectedCategory === c.id}
+                      onClick={() => {
+                        setSelectedCategory(c.id);
+                        setTopic("");
+                      }}
+                    >
+                      {c.name}
+                    </Tile>
+                  ))}
+                </div>
+              </Card>
+            )}
+
+            {selectedCategory && (
+              <Card>
+                <Label>Subcategory</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {filteredSubs.map((s) => (
+                    <Tile
+                      key={s.id}
+                      active={selectedSubcategory === s.id}
+                      onClick={() => {
+                        setSelectedSubcategory(s.id);
+                        setTopic("");
+                      }}
+                    >
+                      {s.name}
+                    </Tile>
+                  ))}
+                </div>
+              </Card>
+            )}
+          </div>
+        </div>
+
+        <PrimaryButton full large onClick={startQuiz}>
+          Start AI Quiz
+        </PrimaryButton>
 
       </div>
+    </main>
+  );
+}
+
+/* UI COMPONENTS BELOW REMAIN EXACTLY SAME */
+
+
+/* ---------- PREMIUM UI COMPONENTS ---------- */
+
+function Card({ children }) {
+  return (
+    <div className="rounded-2xl bg-slate-100/90 backdrop-blur-md border border-slate-200 p-8 shadow-lg transition-all duration-300 hover:shadow-2xl">
+      {children}
     </div>
+  );
+}
+
+function Label({ children }) {
+  return (
+    <p className="text-xs uppercase text-slate-500 mb-4 tracking-wider font-semibold">
+      {children}
+    </p>
+  );
+}
+
+function Tile({ children, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200
+        ${
+          active
+            ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg scale-[1.03]"
+            : "bg-slate-200 text-slate-700 hover:bg-white hover:shadow-md hover:-translate-y-0.5"
+        }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Segmented({ value, options, onChange }) {
+  return (
+    <div className="flex rounded-xl bg-slate-200 p-1">
+      {options.map((o) => {
+        const active = value === o.key;
+        return (
+          <button
+            key={o.key}
+            onClick={() => onChange(o.key)}
+            className={`flex-1 rounded-lg px-4 py-3 text-sm font-semibold transition-all duration-200
+              ${
+                active
+                  ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+              }`}
+          >
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function PrimaryButton({ children, onClick, full, large }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`${full ? "w-full" : ""} ${
+        large ? "px-8 py-4 text-base" : "px-6 py-3 text-sm"
+      } rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function SecondaryButton({ children, onClick, large }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`${
+        large ? "px-6 py-3 text-base" : "px-4 py-2 text-sm"
+      } rounded-xl border border-white/30 bg-white/10 backdrop-blur-md text-white font-medium hover:bg-white/20 hover:scale-[1.03] transition-all duration-300`}
+    >
+      {children}
+    </button>
   );
 }

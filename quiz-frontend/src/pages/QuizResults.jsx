@@ -12,216 +12,237 @@ export default function QuizResults() {
 
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
-  const [analytics, setAnalytics] = useState(null);
+  const [analytics, setAnalytics] = useState(null); // kept so old logic isn't disturbed
+  const [pointsInfo, setPointsInfo] = useState(null);
 
   useEffect(() => {
     async function loadData() {
       try {
         const res = await api.get(`/attempt/${attemptId}/details/`);
         setResult(res.data);
-
-        const a = await api.get(`/attempt/${attemptId}/analytics/`);
-        setAnalytics(a.data);
-
-        setLoading(false);
+        setPointsInfo(res.data.points || null);
       } catch (err) {
-        console.error(err);
-        alert("Failed to load results.");
+        console.error("Failed to load attempt details:", err);
+        setLoading(false);
+        return;
       }
+
+      // 🔥 REMOVED broken /analytics/ call
+      // Your backend does NOT have this endpoint.
+      // Keeping analytics = null so nothing else breaks.
+      setAnalytics(null);
+
+      setLoading(false);
     }
 
     loadData();
   }, [attemptId]);
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-xl text-slate-600">
-        Loading results...
+      <div className="min-h-screen flex items-center justify-center text-slate-400">
+        Loading results…
       </div>
     );
+  }
 
-  if (!result)
+  if (!result) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-xl text-slate-600">
+      <div className="min-h-screen flex items-center justify-center text-slate-400">
         No result data found.
       </div>
     );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-sky-100 p-6 flex justify-center">
-      <div className="w-full max-w-3xl bg-white border border-sky-200 shadow-lg rounded-2xl p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-6 py-10">
+      <div className="max-w-4xl mx-auto space-y-10">
 
-        <h1 className="text-3xl font-bold text-center text-slate-900 mb-2">
-          Quiz Results
-        </h1>
-
-        {isTimeout && (
-          <div className="text-center mb-4 p-3 bg-red-50 border border-red-300 text-red-700 rounded-lg font-semibold">
-            ⏳ Time is up! Your quiz was auto-submitted.
-          </div>
-        )}
-
-        <h2 className="text-lg text-center text-slate-600 mb-6">
-          {result.quiz_title}
-        </h2>
-
-        <div className="text-center mb-10">
-          <p className="text-xl font-semibold text-slate-700">
-            Your Score:{" "}
-            <span className="text-sky-600 font-bold">
-              {result.score}%
-            </span>
+        <section className="text-center space-y-2">
+          <h1 className="text-4xl font-semibold text-white tracking-tight">
+            Quiz Results
+          </h1>
+          <p className="text-slate-400">
+            {result.quiz_title}
           </p>
-        </div>
+        </section>
 
-        {/* ANALYTICS */}
-        {analytics && (
-          <div className="mb-10 p-6 bg-sky-50 border border-sky-200 rounded-xl shadow-sm">
-            <h3 className="text-xl font-bold text-slate-900 mb-4">
-              Performance Analytics
+        <section className="rounded-3xl bg-white p-8 shadow-xl text-center">
+          {isTimeout && (
+            <div className="mb-4 inline-block px-4 py-2 rounded-full bg-red-100 text-red-700 text-sm font-semibold">
+              ⏳ Time expired · Auto-submitted
+            </div>
+          )}
+
+          <p className="text-sm uppercase tracking-widest text-slate-500">
+            Your Score
+          </p>
+          <p className="mt-2 text-6xl font-bold text-sky-600">
+            {result.score}%
+          </p>
+
+          <p className="mt-2 text-slate-500 text-sm">
+            You completed {result.questions.length} questions
+          </p>
+        </section>
+
+        {pointsInfo ? (
+          <section className="rounded-2xl bg-emerald-50 border border-emerald-300 p-6">
+            <h3 className="text-lg font-semibold text-emerald-800 mb-4">
+              🎯 Points Earned
             </h3>
 
-            <p className="text-md mb-3">
-              Accuracy:{" "}
-              <span className="font-bold text-sky-600">
-                {analytics.accuracy}%
+            <div className="space-y-2 text-sm text-slate-800">
+              <Row label="Base Points" value={`+${pointsInfo.base}`} />
+              <Row label="Accuracy Bonus" value={`+${pointsInfo.accuracy_bonus}`} />
+              <Row label="Speed Bonus" value={`+${pointsInfo.speed_bonus}`} />
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-emerald-300 flex justify-between font-semibold">
+              <span>Total Points</span>
+              <span className="text-emerald-700">
+                +{pointsInfo.total}
               </span>
-            </p>
-
-            <div className="mb-4">
-              <h4 className="font-semibold text-slate-800 mb-2">
-                Difficulty Breakdown
-              </h4>
-
-              <div className="space-y-2">
-                {Object.entries(analytics.difficulty_breakdown).map(
-                  ([diff, stat]) => (
-                    <div
-                      key={diff}
-                      className="p-3 bg-white border border-sky-200 rounded-lg"
-                    >
-                      <p className="font-semibold capitalize text-slate-800">
-                        {diff}
-                      </p>
-                      <p className="text-sm text-slate-600">
-                        Correct: {stat.correct}, Incorrect: {stat.incorrect}
-                      </p>
-                      <p className="text-sm font-semibold text-sky-600">
-                        Accuracy: {stat.accuracy}%
-                      </p>
-                    </div>
-                  )
-                )}
-              </div>
             </div>
+          </section>
+        ) : (
+          <section className="rounded-2xl bg-slate-700/40 border border-slate-600 p-6 text-slate-300 text-sm">
+             Practice mode is for skill-building. Switch to Challenge mode to earn leaderboard points.
 
-            <div className="mb-4">
-              <h4 className="font-semibold text-slate-800 mb-2">
-                Strengths
-              </h4>
-              <ul className="list-disc ml-6 text-sm text-emerald-600">
-                {analytics.strengths.map((s, i) => (
-                  <li key={i}>{s}</li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-slate-800 mb-2">
-                Weak Areas
-              </h4>
-              <ul className="list-disc ml-6 text-sm text-red-600">
-                {analytics.weak_areas.map((w, i) => (
-                  <li key={i}>{w}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          </section>
         )}
 
-        {/* QUESTIONS REVIEW */}
-        <h3 className="text-xl font-bold text-slate-900 mb-4">
-          Questions Review
-        </h3>
+        <section>
+          <h2 className="text-2xl font-semibold text-white mb-6">
+            Questions Review
+          </h2>
 
-        <div className="space-y-6">
-          {result.questions.map((q, i) => {
-            const isCorrect = q.selected === q.correct_choice;
-            const isUnanswered = q.selected === -1;
+          <div className="space-y-6">
+            {result.questions.map((q, i) => {
+              const isTypeAnswer = q.question_type === "type_answer";
+              const isUnanswered = isTypeAnswer
+                ? !q.text_answer
+                : q.selected === null || q.selected === undefined;
 
-            return (
-              <div
-                key={q.question_id}
-                className="p-5 bg-white rounded-xl border border-sky-200 shadow-sm"
-              >
-                <h4 className="font-semibold text-slate-900 mb-4">
-                  Q{i + 1}. {q.question_text}
-                </h4>
+              return (
+                <div
+                  key={q.question_id}
+                  className="rounded-2xl bg-white p-6 shadow-md transition-all hover:shadow-lg"
+                >
+                  <h3 className="font-semibold text-slate-900 mb-4">
+                    Q{i + 1}. {q.question_text}
+                  </h3>
 
-                <div className="space-y-3">
-                  {q.choices.map((choice, index) => {
-                    const isCorrectOption = index === q.correct_choice;
-                    const isSelected = index === q.selected;
+                  {!isTypeAnswer && (
+                    <div className="space-y-2">
+                      {q.choices.map((choice, index) => {
+                        const isCorrect = index === q.correct_choice;
+                        const isSelected = index === q.selected;
 
-                    let styling =
-                      "bg-white border-sky-200 text-slate-800";
+                        let cls = "border border-slate-200 bg-white";
 
-                    if (isCorrectOption) {
-                      styling =
-                        "bg-emerald-50 border-emerald-400 text-emerald-900";
-                    }
+                        if (isCorrect)
+                          cls = "border-emerald-400 bg-emerald-50";
+                        else if (isSelected)
+                          cls = "border-red-400 bg-red-50";
 
-                    if (isSelected && !isCorrectOption && !isUnanswered) {
-                      styling =
-                        "bg-red-50 border-red-400 text-red-900";
-                    }
+                        return (
+                          <div
+                            key={index}
+                            className={`p-3 rounded-xl text-sm ${cls}`}
+                          >
+                            {choice}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
 
-                    if (isTimeout && isUnanswered) {
-                      styling =
-                        "bg-red-50 border-red-300 text-red-900";
-                    }
+                  {isTypeAnswer && (
+                    <div className="space-y-3">
+                      <AnswerBlock
+                        label="Your Answer"
+                        value={q.text_answer || "—"}
+                        variant="neutral"
+                      />
+                      {q.correct_text && (
+                        <AnswerBlock
+                          label="Correct Answer"
+                          value={q.correct_text}
+                          variant="success"
+                        />
+                      )}
+                    </div>
+                  )}
 
-                    return (
-                      <div
-                        key={index}
-                        className={`p-3 rounded-lg border ${styling}`}
-                      >
-                        {choice}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {isUnanswered && (
-                  <div className="mt-3 text-red-600 font-semibold text-sm">
-                    ⚠ Not answered
-                  </div>
-                )}
-
-                {!isCorrect && !isUnanswered && q.explanation && (
-                  <div className="mt-4 p-4 bg-amber-50 border border-amber-300 rounded-lg">
-                    <h5 className="font-semibold text-amber-800">
-                      Explanation
-                    </h5>
-                    <p className="text-sm text-slate-900 mt-1 leading-relaxed">
-                      {q.explanation}
+                  {isUnanswered && (
+                    <p className="mt-3 text-sm font-semibold text-red-600">
+                      ⚠ Not answered
                     </p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                  )}
 
-        <div className="text-center mt-10">
+                  {q.explanation && (
+                    <div className="mt-4 rounded-xl bg-amber-50 border border-amber-300 p-4">
+                      <p className="font-semibold text-amber-800">
+                        Explanation
+                      </p>
+                      <p className="text-sm text-slate-800 mt-1">
+                        {q.explanation}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <div className="flex flex-col sm:flex-row justify-center gap-4 pt-6">
+          <button
+            onClick={() =>
+              navigate(`/select?retake=${result.quiz_id}`)
+            }
+            className="px-6 py-3 rounded-xl bg-emerald-600 text-white font-semibold
+                       hover:bg-emerald-700 hover:shadow-lg transition"
+          >
+            Retake Quiz
+          </button>
+
           <button
             onClick={() => navigate("/dashboard")}
-            className="px-6 py-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition font-semibold"
+            className="px-6 py-3 rounded-xl bg-sky-600 text-white font-semibold
+                       hover:bg-sky-700 hover:shadow-lg transition"
           >
             Back to Dashboard
           </button>
         </div>
+
       </div>
+    </div>
+  );
+}
+
+function Row({ label, value }) {
+  return (
+    <div className="flex justify-between">
+      <span>{label}</span>
+      <span className="font-semibold">{value}</span>
+    </div>
+  );
+}
+
+function AnswerBlock({ label, value, variant }) {
+  const styles =
+    variant === "success"
+      ? "bg-emerald-50 border-emerald-300 text-emerald-900"
+      : "bg-slate-50 border-slate-300 text-slate-900";
+
+  return (
+    <div className={`p-4 rounded-xl border ${styles}`}>
+      <p className="text-xs uppercase tracking-widest mb-1">
+        {label}
+      </p>
+      <p className="font-semibold">{value}</p>
     </div>
   );
 }
