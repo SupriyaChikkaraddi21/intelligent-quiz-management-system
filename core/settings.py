@@ -1,3 +1,5 @@
+# core/settings.py
+
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -6,12 +8,16 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# =====================
 # SECURITY
+# =====================
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-dev-placeholder")
 DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() in ("1", "true")
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
+# =====================
 # INSTALLED APPS
+# =====================
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -25,23 +31,34 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "corsheaders",
+    "django_extensions",
 
     # Local apps
+    "categories.apps.CategoriesConfig",
     "quiz",
     "accounts",
+    "ai",
+    "gamification",
+    "leaderboard",
+    "classroom",
+    "analytics",
+
 ]
 
 SITE_ID = 1
 
-# AUTH BACKENDS (NO ALLAUTH)
+# =====================
+# AUTHENTICATION
+# =====================
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
+# =====================
 # MIDDLEWARE
+# =====================
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
-
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -55,7 +72,9 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = "core.urls"
 
+# =====================
 # TEMPLATES
+# =====================
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -73,22 +92,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "core.wsgi.application"
 
-# DATABASE (MySQL)
+# =====================
+# DATABASE (PostgreSQL)
+# =====================
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": os.getenv("MYSQL_NAME", "quizgen"),
-        "USER": os.getenv("MYSQL_USER", "root"),
-        "PASSWORD": os.getenv("MYSQL_PASSWORD", ""),
-        "HOST": os.getenv("MYSQL_HOST", "127.0.0.1"),
-        "PORT": os.getenv("MYSQL_PORT", "3306"),
-        "OPTIONS": {
-            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'"
-        },
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("POSTGRES_DB", "intelligent_quiz"),
+        "USER": os.getenv("POSTGRES_USER", "postgres"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+        "HOST": os.getenv("POSTGRES_HOST", "localhost"),
+        "PORT": os.getenv("POSTGRES_PORT", "5432"),
+
     }
 }
 
-# REST FRAMEWORK
+# =====================
+# DJANGO REST FRAMEWORK
+# =====================
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
@@ -98,7 +119,9 @@ REST_FRAMEWORK = {
     ],
 }
 
+# =====================
 # STATIC & MEDIA
+# =====================
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
@@ -107,9 +130,28 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# OPENAI KEY
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# =====================
+# API KEYS (DO NOT PRINT)
+# =====================
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-# GOOGLE LOGIN KEYS (FOR YOUR CUSTOM AUTH)
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+
+# =====================
+# BEHAVIOR
+# =====================
+APPEND_SLASH = True
+
+DEFAULT_FROM_EMAIL = "noreply@quizgen.com"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
+
+
+EMAIL_HOST_USER =  os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

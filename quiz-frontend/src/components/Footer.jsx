@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 export default function Footer() {
   return (
@@ -15,23 +16,39 @@ export default function Footer() {
 
         {/* QUICK LINKS */}
         <div>
-          <h3 className="text-sm font-semibold text-white tracking-wide">Quick Links</h3>
+          <h3 className="text-sm font-semibold text-white tracking-wide">
+            Quick Links
+          </h3>
           <ul className="mt-4 space-y-2 text-sm">
-            <li><a href="/" className="hover:text-white transition">Home</a></li>
-            <li><a href="/select" className="hover:text-white transition">Create Quiz</a></li>
-            <li><a href="/leaderboard" className="hover:text-white transition">Leaderboard</a></li>
-            <li><a href="/profile" className="hover:text-white transition">Profile</a></li>
+            <li>
+              <Link to="/" className="hover:text-white transition">
+                Home
+              </Link>
+            </li>
+            <li>
+              <Link to="/login" className="hover:text-white transition">
+                Login
+              </Link>
+            </li>
+            <li>
+              <Link to="/register" className="hover:text-white transition">
+                Register
+              </Link>
+            </li>
           </ul>
         </div>
 
         {/* SOCIAL */}
         <div>
-          <h3 className="text-sm font-semibold text-white tracking-wide">Connect</h3>
+          <h3 className="text-sm font-semibold text-white tracking-wide">
+            Connect
+          </h3>
           <ul className="mt-4 space-y-2 text-sm">
             <li>
               <a
                 href="https://github.com"
                 target="_blank"
+                rel="noreferrer"
                 className="hover:text-white transition"
               >
                 GitHub
@@ -41,17 +58,10 @@ export default function Footer() {
               <a
                 href="https://linkedin.com"
                 target="_blank"
+                rel="noreferrer"
                 className="hover:text-white transition"
               >
                 LinkedIn
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                className="hover:text-white transition"
-              >
-                Help & Support
               </a>
             </li>
           </ul>
@@ -59,7 +69,6 @@ export default function Footer() {
 
       </div>
 
-      {/* COPYRIGHT */}
       <div className="border-t border-gray-700 mt-10 pt-5">
         <p className="text-center text-gray-500 text-sm">
           © {new Date().getFullYear()} QuizGen. All rights reserved.

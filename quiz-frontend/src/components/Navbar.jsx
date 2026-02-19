@@ -1,77 +1,48 @@
-// src/components/Navbar.jsx
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-import useTheme from "../hooks/useTheme";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
-  const { theme, setTheme } = useTheme();
+  const location = useLocation();
+
+  // Page title mapping
+  const titles = {
+    "/dashboard": "Dashboard",
+    "/select": "Create Quiz",
+    "/leaderboard": "Leaderboard",
+    "/rewards": "Rewards", // 🔥 ADDED
+    "/progress": "Progress",
+    "/analytics": "Analytics",
+    "/profile": "Profile",
+  };
+
+  const pageTitle = titles[location.pathname] || "QuizGen";
 
   return (
-    <nav className="w-full bg-[#0B2341] text-white shadow-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <header className="sticky top-0 z-40 bg-white border-b border-sky-200">
+      <div className="h-16 px-8 flex items-center justify-between">
 
-        {/* LOGO */}
-        <div
-          onClick={() => navigate("/dashboard")}
-          className="text-2xl font-semibold cursor-pointer tracking-wide"
-        >
-          QuizGen
-        </div>
-
-        {/* NAV LINKS */}
-        <div className="flex items-center gap-6 text-sm font-medium">
-
-          {/* THEME TOGGLE */}
-          <button
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            className="px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/20 transition"
+        {/* LEFT — BRAND + CONTEXT */}
+        <div className="flex items-center gap-6">
+          <div
+            onClick={() => navigate("/dashboard")}
+            className="text-xl font-extrabold tracking-tight
+                       text-slate-900 cursor-pointer"
           >
-            {theme === "light" ? "Dark Mode" : "Light Mode"}
-          </button>
+            Quiz<span className="text-sky-500">Gen</span>
+          </div>
 
-          {!token ? (
-            <>
-              <Link className="hover:text-[#00B8A9] transition" to="/login">
-                Login
-              </Link>
+          <div className="h-6 w-px bg-sky-200" />
 
-              <Link className="hover:text-[#00B8A9] transition" to="/register">
-                Register
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link className="hover:text-[#00B8A9] transition" to="/dashboard">
-                Dashboard
-              </Link>
-
-              <Link className="hover:text-[#00B8A9] transition" to="/select">
-                Create Quiz
-              </Link>
-
-              <Link className="hover:text-[#00B8A9] transition" to="/leaderboard">
-                Leaderboard
-              </Link>
-
-              <Link className="hover:text-[#00B8A9] transition" to="/profile">
-                Profile
-              </Link>
-
-              <button
-                onClick={() => {
-                  localStorage.removeItem("token");
-                  navigate("/login");
-                }}
-                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
-              >
-                Logout
-              </button>
-            </>
-          )}
+          <div className="text-sm text-slate-600">
+            {pageTitle}
+          </div>
         </div>
+
+        {/* RIGHT — EMPTY (reserved for future) */}
+        <div />
+
       </div>
-    </nav>
+    </header>
   );
 }

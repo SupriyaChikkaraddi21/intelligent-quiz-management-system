@@ -1,6 +1,9 @@
 Django
 djangorestframework
-mysqlclient
-python-dotenv
-openai
+djangorestframework-simplejwt
 django-cors-headers
+django-extensions
+psycopg2-binary
+python-dotenv
+google-auth
+Pillow

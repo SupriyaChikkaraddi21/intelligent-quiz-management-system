@@ -1,36 +1,29 @@
-// src/pages/Dashboard.jsx
 import React, { useEffect, useState } from "react";
 import api from "../api/api";
 import { useNavigate } from "react-router-dom";
-import ProgressChartPage from "./ProgressChart";
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
+  const [difficulty, setDifficulty] = useState(null);
+  const [gamification, setGamification] = useState(null);
   const [loading, setLoading] = useState(true);
+
   const navigate = useNavigate();
 
   useEffect(() => {
     async function loadDashboard() {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        navigate("/login");
-        return;
-      }
-
       try {
-        // (unchanged) backend endpoint
-        const res = await api.get("/quiz/dashboard/");
-        setData(res.data);
-      } catch (err) {
-        console.error("Dashboard error:", err);
+        const [dash, diff, game] = await Promise.all([
+          api.get("/user/dashboard/"),
+          api.get("/user/difficulty/"),
+          api.get("/user/gamification/"),
+        ]);
 
-        if (err.response?.status === 401) {
-          localStorage.removeItem("token");
-          navigate("/login");
-        } else {
-          alert("Failed to load dashboard");
-        }
+        setData(dash.data);
+        setDifficulty(diff.data);
+        setGamification(game.data);
+      } catch {
+        navigate("/login");
       } finally {
         setLoading(false);
       }
@@ -41,179 +34,307 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
-        <div className="text-lg text-[#1E293B]">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-300">
+        Loading your dashboard…
       </div>
     );
   }
 
-  if (!data) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
-        <div className="text-lg text-[#1E293B]">No dashboard data available.</div>
-      </div>
-    );
-  }
+  const latestScore = data?.latest_score ?? 0;
+  const bestScore = data?.best_score ?? 0;
+  const attempts = data?.recent_attempts || [];
 
-  // helper to format date safely
-  const formatDate = (d) => {
-    if (!d) return null;
-    try {
-      const dt = new Date(d);
-      if (isNaN(dt.getTime())) return null;
-      return dt.toLocaleString();
-    } catch {
-      return null;
-    }
-  };
+  const level = gamification?.level || "Beginner";
+  const nextLevel = gamification?.next_level;
+  const remaining = gamification?.remaining_for_next ?? 0;
+  const streak = gamification?.current_streak ?? 0;
+  const points = gamification?.points ?? 0;
+  const badges = gamification?.badges || [];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-6">
-      {/* Page header */}
-      <div className="mb-6">
-        <h1 className="text-[28px] font-semibold text-[#1F3A5F]">Dashboard</h1>
-        <p className="mt-1 text-sm text-[#64748B]">
-          Overview — your quiz activity and performance.
-        </p>
-      </div>
+    <main className="relative min-h-screen w-full px-6 py-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.04),_transparent_40%)] pointer-events-none" />
 
-      {/* KPI Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
-        {/* Card style kept uniform */}
-        <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
-          <div className="text-xs text-[#64748B]">Total Quizzes Attempted</div>
-          <div className="mt-3 text-3xl font-semibold text-[#1E293B]">
-            {data.total_quizzes ?? 0}
+      <div className="relative w-full space-y-10">
+
+        {/* HEADER */}
+        <section className="space-y-2">
+          <h1 className="text-4xl font-semibold text-white tracking-tight">
+            Learning Dashboard
+          </h1>
+          <p className="text-slate-400 text-sm">
+            Track progress, performance, and consistency.
+          </p>
+
+          <div className="pt-4 flex gap-3">
+            <SecondaryButton onClick={() => navigate("/my-quizzes")}>
+              My Quizzes
+            </SecondaryButton>
+            <PrimaryButton onClick={() => navigate("/create")}>
+              + Create Quiz
+            </PrimaryButton>
           </div>
-          <div className="mt-2 text-xs text-[#64748B]">Number of quizzes you attempted so far</div>
-        </div>
+        </section>
 
-        <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
-          <div className="text-xs text-[#64748B]">Average Score</div>
+        {/* KPI CARDS */}
+        <section className="grid md:grid-cols-4 gap-6">
+          <KPI
+            icon="📊"
+            title="Latest Score"
+            value={`${latestScore}%`}
+            progress={latestScore}
+            color="sky"
+            hint="Based on your last quiz"
+          />
+          <KPI
+            icon="🏆"
+            title="Best Score"
+            value={`${bestScore}%`}
+            progress={bestScore}
+            color="emerald"
+            hint="Your highest performance"
+          />
+          <KPI
+            icon="🪙"
+            title="Reward Points"
+            value={points}
+            progress={points % 100}
+            color="amber"
+            hint="Earn more by practicing"
+          />
+          <KPI
+            icon="🔥"
+            title="Daily Streak"
+            value={`${streak} days`}
+            progress={Math.min(streak * 10, 100)}
+            color="orange"
+            hint="Consistency matters"
+          />
+        </section>
 
-          {/* requirement: make average score black */}
-          <div className="mt-3 text-3xl font-semibold text-[#000000]">
-            {Math.round(data.average_score ?? 0)}%
+        {/* AI NEXT STEP */}
+        <section>
+          <div className="rounded-2xl bg-slate-100/90 backdrop-blur-md p-8 flex items-center justify-between border border-slate-200 shadow-xl transition hover:shadow-2xl">
+            <div>
+              <p className="text-xs uppercase text-slate-500">
+                AI Recommended Next Step
+              </p>
+              <p className="mt-2 text-2xl font-bold text-indigo-600 capitalize">
+                {difficulty?.difficulty || "Easy"} Quiz
+              </p>
+              <p className="text-sm text-slate-600 mt-1">
+                {difficulty?.reason || "Not enough data yet"}
+              </p>
+            </div>
+
+            <PrimaryButton onClick={() => navigate("/select")}>
+              Start Now →
+            </PrimaryButton>
           </div>
+        </section>
 
-          <div className="mt-2 text-xs text-[#64748B]">Your average quiz score</div>
-        </div>
+        {/* LEVEL & MOTIVATION */}
+        <section className="grid md:grid-cols-2 gap-6">
+          <Card>
+            <p className="text-xs uppercase text-slate-500 mb-2">
+              Your Level
+            </p>
+            <p className="text-2xl font-bold text-emerald-600">
+              {level}
+            </p>
 
-        <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
-          <div className="text-xs text-[#64748B]">Recent Attempts</div>
-          <div className="mt-3 text-3xl font-semibold text-[#1E293B]">
-            {Array.isArray(data.recent_scores) ? data.recent_scores.length : 0}
-          </div>
-          <div className="mt-2 text-xs text-[#64748B]">Most recent quiz attempts</div>
-        </div>
-      </div>
+            {nextLevel && (
+              <p className="text-xs text-slate-500 mt-1">
+                {remaining} quizzes to reach{" "}
+                <span className="font-semibold">{nextLevel}</span>
+              </p>
+            )}
 
-      {/* Recent Attempts (table) */}
-      <section className="mb-8">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h2 className="text-lg font-semibold text-[#1F3A5F]">Recent Attempts</h2>
-            <p className="text-sm text-[#64748B]">Latest attempts and current status</p>
-          </div>
-          <div className="text-sm text-[#64748B]">Showing latest {Math.min((data.recent_scores || []).length, 5)}</div>
-        </div>
+            <div className="mt-4 flex gap-2 flex-wrap">
+              {badges.length ? (
+                badges.map((b, i) => (
+                  <span
+                    key={i}
+                    className="px-3 py-1 text-xs rounded-full bg-sky-100 text-sky-700"
+                  >
+                    🏅 {b}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs text-slate-400">
+                  No badges yet
+                </span>
+              )}
+            </div>
+          </Card>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-          <div className="w-full overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-100">
-              <thead className="bg-white">
+          <Card>
+            <p className="text-xs uppercase text-slate-500 mb-2">
+              Motivation
+            </p>
+            <p className="text-lg font-semibold text-slate-800">
+              {streak >= 5
+                ? "🔥 You’re on fire. Keep going!"
+                : "Consistency beats intensity."}
+            </p>
+            <p className="text-sm text-slate-600 mt-1">
+              Practice daily to level up faster.
+            </p>
+          </Card>
+        </section>
+
+        {/* RECENT ATTEMPTS */}
+        <section>
+          <h2 className="text-lg font-semibold mb-4 text-white">
+            Recent Attempts
+          </h2>
+
+          <div className="rounded-2xl bg-slate-100/95 backdrop-blur-md shadow-xl overflow-hidden border border-slate-200">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-200/70 text-slate-600">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#64748B] uppercase tracking-wider">
-                    Attempt
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#64748B] uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-[#64748B] uppercase tracking-wider">
-                    Score
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-[#64748B] uppercase tracking-wider">
-                    Status
-                  </th>
+                  <th className="px-6 py-3 text-left">Quiz</th>
+                  <th className="px-6 py-3 text-center">Date</th>
+                  <th className="px-6 py-3 text-right">Score</th>
+                  <th className="px-6 py-3 text-right">Status</th>
                 </tr>
               </thead>
 
-              <tbody className="bg-white divide-y divide-gray-50">
-                {(!data.recent_scores || data.recent_scores.length === 0) ? (
+              <tbody className="divide-y divide-slate-200">
+                {attempts.length ? (
+                  attempts.map((a, i) => (
+                    <tr
+                      key={i}
+                      onClick={() =>
+                        navigate(
+                          a.completed
+                            ? `/results/${a.attempt_id}`
+                            : `/attempt/${a.attempt_id}`
+                        )
+                      }
+                      className="cursor-pointer transition hover:bg-slate-200/50"
+                    >
+                      <td className="px-6 py-4">
+                        <p className="font-medium">
+                          Attempt {i + 1}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {a.quiz_title}
+                        </p>
+                      </td>
+
+                      <td className="px-6 py-4 text-center">
+                        {new Date(a.date).toLocaleString()}
+                      </td>
+
+                      <td className="px-6 py-4 text-right">
+                        <ScorePill score={a.score} />
+                      </td>
+
+                      <td className="px-6 py-4 text-right">
+                        {a.completed ? (
+                          <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 text-xs">
+                            Completed
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-600 text-xs">
+                            In Progress
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
                   <tr>
-                    <td colSpan="4" className="px-6 py-8 text-center text-sm text-[#64748B]">
-                      No recent attempts available.
+                    <td colSpan="4" className="py-8 text-center text-slate-500">
+                      No attempts yet
                     </td>
                   </tr>
-                ) : (
-                  data.recent_scores.slice(0, 20).map((r, i) => {
-                    const dateStr = formatDate(r.started_at);
-                    const displayDate = dateStr ?? "Not available";
-                    const scoreDisplay = (r.score !== null && r.score !== undefined) ? `${r.score}%` : "—";
-                    const completed = !!r.completed;
-                    const statusLabel = dateStr ? (completed ? "Completed" : "In progress") : "Pending";
-
-                    return (
-                      <tr key={i} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-[#1E293B]">{`Attempt ${i + 1}`}</div>
-                          <div className="text-xs text-[#64748B]">{r.quiz_title ?? "Quiz attempt"}</div>
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {dateStr ? (
-                            <div className="text-sm text-[#1E293B]">{displayDate}</div>
-                          ) : (
-                            <div className="text-sm text-[#64748B]">Not available</div>
-                          )}
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                          <div className="text-sm font-medium text-[#1E293B]">{scoreDisplay}</div>
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                          {statusLabel === "Completed" ? (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-[#ECFDF5] text-[#065F46]">
-                              Completed
-                            </span>
-                          ) : statusLabel === "In progress" ? (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-[#FEF3C7] text-[#92400E]">
-                              In progress
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-[#F1F5F9] text-[#64748B]">
-                              Pending
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
                 )}
               </tbody>
             </table>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
+    </main>
+  );
+}
 
-      {/* Performance Chart */}
-      <section>
-        <div className="mb-3">
-          <h2 className="text-lg font-semibold text-[#1F3A5F]">Performance</h2>
-          <p className="text-sm text-[#64748B]">Score trend over time</p>
-        </div>
+/* ---------- COMPONENTS ---------- */
 
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-          <div className="w-full h-[360px] px-2 py-3"> 
-            {/* px/padding ensures chart has breathing room and titles won't overlap edges */}
-            <ProgressChartPage />
-          </div>
-          <div className="mt-3 text-sm text-[#64748B]">
-            The chart displays your score history (older → newer). Hover a point to see the exact attempt date and score.
-          </div>
-        </div>
-      </section>
+function KPI({ icon, title, value, progress, color, hint }) {
+  const colors = {
+    sky: "bg-sky-500",
+    emerald: "bg-emerald-500",
+    amber: "bg-amber-500",
+    orange: "bg-orange-500",
+  };
+
+  return (
+    <div className="rounded-2xl bg-slate-100/90 backdrop-blur-md border border-slate-200 p-6 shadow-lg transition hover:shadow-xl">
+      <p className="text-xs uppercase text-slate-500 flex items-center gap-2">
+        <span>{icon}</span> {title}
+      </p>
+
+      <p className="mt-3 text-3xl font-bold text-slate-900">
+        {value}
+      </p>
+
+      <p className="text-xs text-slate-500 mt-1">{hint}</p>
+
+      <div className="mt-3 h-2 bg-slate-200 rounded-full overflow-hidden">
+        <div
+          className={`h-full ${colors[color]} transition-all duration-500`}
+          style={{ width: `${Math.min(progress, 100)}%` }}
+        />
+      </div>
     </div>
+  );
+}
+
+function Card({ children }) {
+  return (
+    <div className="rounded-2xl bg-slate-100/90 backdrop-blur-md border border-slate-200 p-6 shadow-lg transition hover:shadow-xl">
+      {children}
+    </div>
+  );
+}
+
+function ScorePill({ score }) {
+  const style =
+    score >= 75
+      ? "bg-emerald-100 text-emerald-700"
+      : score >= 40
+      ? "bg-sky-100 text-sky-700"
+      : "bg-rose-100 text-rose-700";
+
+  return (
+    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${style}`}>
+      {score}%
+    </span>
+  );
+}
+
+/* ---------- BUTTONS ---------- */
+
+function PrimaryButton({ children, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="rounded-2xl bg-indigo-600 px-6 py-3 text-white font-semibold shadow-lg hover:bg-indigo-700 transition"
+    >
+      {children}
+    </button>
+  );
+}
+
+function SecondaryButton({ children, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="rounded-xl border border-slate-300 bg-slate-100 px-4 py-2 text-sm text-slate-700 hover:bg-slate-200 transition"
+    >
+      {children}
+    </button>
   );
 }

@@ -9,49 +9,39 @@ export default function ProfilePage() {
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
 
-  // Utility: ensure a URL is absolute (prefix origin if needed)
+  const API_BASE = "http://localhost:8000";
+
   const toAbsoluteUrl = (url) => {
     if (!url) return null;
-    if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    // url might be '/media/avatars/....' -> prefix origin
-    return `${window.location.origin}${url}`;
+    if (url.startsWith("http")) return url;
+    return `${API_BASE}${url}`;
   };
 
-  // -----------------------------
-  // Load profile data
-  // -----------------------------
+
   const loadProfile = async () => {
     try {
       const res = await api.get("/accounts/profile/");
       setProfile(res.data);
-
       setFullName(res.data.full_name || "");
-      setPreferredDifficulty(res.data.preferences?.preferred_difficulty || "");
-      setPreferredCategory(res.data.preferences?.preferred_category || "");
+      setPreferredDifficulty(
+        res.data.preferences?.preferred_difficulty || ""
+      );
+      setPreferredCategory(
+        res.data.preferences?.preferred_category || ""
+      );
 
-      // backend may return either `avatar` (relative path) or `avatar_url` (absolute)
-      const avatarFromApi =
+      const avatar =
         res.data.avatar_url ?? res.data.avatar ?? null;
-
-      if (avatarFromApi) {
-        setAvatarPreview(toAbsoluteUrl(avatarFromApi));
-      } else {
-        setAvatarPreview(null);
-      }
-    } catch (err) {
-      console.error("Failed to load profile:", err);
+      setAvatarPreview(avatar ? toAbsoluteUrl(avatar) : null);
+    } catch {
       alert("Failed to load profile");
     }
   };
 
   useEffect(() => {
     loadProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // -----------------------------
-  // Save profile
-  // -----------------------------
   const saveProfile = async () => {
     try {
       await api.post("/accounts/profile/", {
@@ -61,23 +51,17 @@ export default function ProfilePage() {
           preferred_category: preferredCategory,
         },
       });
-
-      alert("Profile updated!");
-      await loadProfile();
-    } catch (err) {
-      console.error("Failed to update profile:", err);
+      alert("Profile updated");
+      loadProfile();
+    } catch {
       alert("Failed to update profile");
     }
   };
 
-  // -----------------------------
-  // Upload avatar
-  // -----------------------------
   const uploadAvatar = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // show local preview immediately
     const localUrl = URL.createObjectURL(file);
     setAvatarPreview(localUrl);
 
@@ -86,65 +70,92 @@ export default function ProfilePage() {
 
     try {
       setUploading(true);
-      const res = await api.post("/accounts/profile/avatar/", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await api.post(
+        "/accounts/profile/avatar/",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
 
-      // Prefer backend-provided avatar_url if present
-      const avatarUrlFromResponse =
+      const avatar =
         res?.data?.avatar_url ?? res?.data?.avatar ?? null;
-
-      if (avatarUrlFromResponse) {
-        setAvatarPreview(toAbsoluteUrl(avatarUrlFromResponse));
-      } else {
-        // As a fallback, reload profile to get avatar path
-        await loadProfile();
-      }
-
-      alert("Avatar uploaded!");
-    } catch (err) {
-      console.error("Failed to upload avatar:", err);
-      alert("Failed to upload avatar");
-      // revert local preview when failed
-      await loadProfile();
+      if (avatar) setAvatarPreview(toAbsoluteUrl(avatar));
+    } catch {
+      alert("Avatar upload failed");
+      loadProfile();
     } finally {
       setUploading(false);
-      // revoke local URL object after some time to release memory (optional)
-      setTimeout(() => {
-        if (localUrl) URL.revokeObjectURL(localUrl);
-      }, 5000);
     }
   };
 
-  if (!profile)
+  if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-xl">
-        Loading profile...
+      <div className="flex items-center justify-center h-[60vh] text-slate-500">
+        Loading profile…
       </div>
     );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 flex justify-center">
-      <div className="w-full max-w-2xl bg-white shadow-lg rounded-xl p-8">
-        <h1 className="text-3xl font-bold text-center mb-8">Your Profile</h1>
+    <div className="relative min-h-screen flex items-center justify-center px-4
+                    bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
 
-        {/* Avatar Section */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-gray-300 bg-white flex items-center justify-center">
+      {/* ambient */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.06),_transparent_45%)] pointer-events-none" />
+
+      {/* CARD */}
+      <div
+        className="
+          relative w-full max-w-xl
+          rounded-3xl bg-white p-8
+          shadow-xl
+          transition-all duration-300
+        "
+      >
+        {/* HEADER */}
+        <div className="mb-10 text-center">
+          <h1 className="text-3xl font-semibold text-slate-900">
+            Profile
+          </h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Manage your personal details and learning preferences.
+          </p>
+        </div>
+
+        {/* AVATAR */}
+        <div className="flex flex-col items-center mb-10">
+          <div
+            className="
+              relative w-28 h-28 rounded-full overflow-hidden
+              bg-slate-100
+              ring-2 ring-sky-200
+              transition-all duration-300
+              hover:ring-sky-400 hover:shadow-lg hover:-translate-y-1
+            "
+          >
             {avatarPreview ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={avatarPreview}
                 alt="Avatar"
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="text-gray-400">Avatar</div>
+              <div className="w-full h-full flex items-center justify-center text-sm text-slate-400">
+                No Avatar
+              </div>
             )}
           </div>
 
-          <label className="mt-4 cursor-pointer inline-flex items-center gap-3 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-            {uploading ? "Uploading..." : "Upload Avatar"}
+          <label
+            className="
+              mt-4 cursor-pointer
+              text-sm font-medium
+              px-4 py-2 rounded-lg
+              bg-sky-100 text-sky-700
+              hover:bg-sky-200
+              transition
+            "
+          >
+            {uploading ? "Uploading…" : "Change Avatar"}
             <input
               type="file"
               accept="image/*"
@@ -154,57 +165,92 @@ export default function ProfilePage() {
           </label>
         </div>
 
-        {/* Profile Fields */}
+        {/* FORM */}
         <div className="space-y-6">
-          {/* Full Name */}
-          <div>
-            <label className="font-semibold">Full Name</label>
+
+          <Field label="Full Name">
             <input
-              type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="mt-2 w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="input"
             />
-          </div>
+          </Field>
 
-          {/* Difficulty */}
-          <div>
-            <label className="font-semibold">Preferred Difficulty</label>
+          <Field label="Preferred Difficulty">
             <select
               value={preferredDifficulty}
               onChange={(e) => setPreferredDifficulty(e.target.value)}
-              className="mt-2 w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="input"
             >
-              <option value="">-- None --</option>
+              <option value="">None</option>
               <option value="Easy">Easy</option>
               <option value="Medium">Medium</option>
               <option value="Hard">Hard</option>
             </select>
-          </div>
+          </Field>
 
-          {/* Category */}
-          <div>
-            <label className="font-semibold">Preferred Category</label>
+          <Field label="Preferred Category">
             <input
-              type="text"
               value={preferredCategory}
               onChange={(e) => setPreferredCategory(e.target.value)}
-              placeholder="Eg: Python, Java, DBMS"
-              className="mt-2 w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              placeholder="Python, Java, DBMS"
+              className="input"
             />
-          </div>
+          </Field>
+
         </div>
 
-        {/* Save Button */}
-        <div className="mt-8 text-center">
+        {/* SAVE */}
+        <div className="mt-10 flex justify-end">
           <button
             onClick={saveProfile}
-            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold"
+            className="
+              px-6 py-3 rounded-xl
+              bg-sky-500 text-white font-semibold
+              shadow-md
+              hover:bg-sky-600 hover:shadow-lg hover:-translate-y-[1px]
+              active:scale-[0.98]
+              transition-all
+            "
           >
             Save Changes
           </button>
         </div>
       </div>
+
+      {/* styles */}
+      <style>
+        {`
+          .input {
+            margin-top: 0.5rem;
+            width: 100%;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            color: #0f172a;
+            outline: none;
+            transition: all 0.2s ease;
+          }
+          .input:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56,189,248,0.25);
+          }
+        `}
+      </style>
+    </div>
+  );
+}
+
+/* ---------- SMALL WRAPPER ---------- */
+
+function Field({ label, children }) {
+  return (
+    <div>
+      <label className="text-xs uppercase tracking-widest text-slate-500">
+        {label}
+      </label>
+      {children}
     </div>
   );
 }

@@ -5,13 +5,20 @@ import App from "./App";
 import "./index.css";
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { AuthProvider } from "./context/AuthContext";
 
-const clientId = "495278527722-jei6qqvig7d2srd9600vo4fvh62i8a75.apps.googleusercontent.com"; // <-- PUT YOUR CLIENT ID HERE
+const clientId =
+  "250238254044-r295jfnjpmpb53p5ogauppgqq48uf8js.apps.googleusercontent.com"; 
+// ↑ keep your existing client ID
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <GoogleOAuthProvider clientId={clientId}>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </GoogleOAuthProvider>
+  <React.StrictMode>
+    <GoogleOAuthProvider clientId={clientId}>
+      <BrowserRouter>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </BrowserRouter>
+    </GoogleOAuthProvider>
+  </React.StrictMode>
 );

@@ -5,227 +5,215 @@ export default function LandingPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="bg-[#F8FAFC] text-[#1E293B]">
+    <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
 
-      {/* ---------------- HERO SECTION ---------------- */}
-      <section className="max-w-7xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-12 items-center">
+      {/* ================= NAVBAR ================= */}
+      <nav className="sticky top-0 z-50 backdrop-blur-xl bg-white/5 border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div
+            onClick={() => navigate("/")}
+            className="text-xl font-extrabold tracking-tight cursor-pointer"
+          >
+            Quiz<span className="text-sky-400">Gen</span>
+          </div>
 
-        {/* Left */}
-        <div>
-          <h1 className="text-4xl md:text-5xl font-bold leading-tight text-[#1F3A5F]">
-            QuizGen – Intelligent Quiz Management <br /> with AI-Generated Questions
-          </h1>
+          <div className="flex gap-3">
+            <button
+              onClick={() => navigate("/login")}
+              className="px-4 py-2 text-sm rounded-lg border border-white/20 hover:bg-white/10 transition"
+            >
+              Login
+            </button>
 
-          <p className="text-lg mt-6 text-[#64748B] max-w-lg">
-            Reduce quiz creation time, improve learning outcomes, and track
-            performance effortlessly — all powered by AI and secure evaluation workflows.
-          </p>
-
-          <div className="flex gap-4 mt-8">
             <button
               onClick={() => navigate("/register")}
-              className="bg-[#F5A623] text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition"
+              className="px-5 py-2 text-sm rounded-lg bg-sky-500 text-white font-semibold hover:bg-sky-600 transition shadow-lg shadow-sky-500/40"
             >
-              Start Quiz Free
-            </button>
-
-            <button
-              onClick={() => navigate("/dashboard")}
-              className="border px-6 py-3 rounded-lg font-semibold text-[#1F3A5F] hover:bg-gray-100 transition"
-            >
-              View Dashboard
+              Get Started
             </button>
           </div>
+        </div>
+      </nav>
 
-          <p className="text-sm text-[#64748B] mt-4">
-            Secure platform • AI-assisted • Performance tracking
-          </p>
+      {/* ================= HERO ================= */}
+      <section className="relative">
+
+        {/* Background glow */}
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[900px] bg-sky-500/20 blur-[160px] rounded-full pointer-events-none" />
+
+        <div className="relative max-w-7xl mx-auto px-6 py-32 grid md:grid-cols-2 gap-20 items-center">
+
+          {/* LEFT */}
+          <div>
+            <h1 className="text-5xl md:text-6xl font-extrabold leading-tight">
+              Intelligent <br />
+              <span className="text-sky-400">Quiz Management</span>
+            </h1>
+
+            <p className="mt-6 text-lg text-slate-300 max-w-xl">
+              Build, generate, and analyze quizzes using AI. Track performance,
+              adapt difficulty, and improve learning outcomes — all in one
+              powerful learning system.
+            </p>
+
+            <div className="flex gap-4 mt-10">
+              <button
+                onClick={() => navigate("/register")}
+                className="bg-sky-500 hover:bg-sky-600 px-7 py-3 rounded-xl font-semibold text-white transition shadow-xl shadow-sky-500/40"
+              >
+                Start Free
+              </button>
+
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="px-7 py-3 rounded-xl border border-white/20 hover:bg-white/10 transition"
+              >
+                View Dashboard
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-400 mt-4">
+              AI-powered • Secure • Academic-ready
+            </p>
+          </div>
+
+          {/* RIGHT - ENHANCED PREVIEW */}
+          <div className="hidden md:block">
+            <div className="relative rounded-3xl bg-white/5 border border-white/10 backdrop-blur-2xl p-8 shadow-2xl">
+
+              {/* Inner glow */}
+              <div className="absolute inset-0 rounded-3xl bg-sky-500/5 blur-2xl pointer-events-none" />
+
+              <p className="text-sm text-slate-400 mb-6 relative">
+                Dashboard Preview
+              </p>
+
+              {/* Elevated Stats */}
+              <div className="grid grid-cols-3 gap-4 mb-8 relative">
+                {[
+                  ["Total Quizzes", "12"],
+                  ["Avg Score", "78%"],
+                  ["Accuracy", "82%"],
+                ].map(([label, value]) => (
+                  <div
+                    key={label}
+                    className="rounded-xl bg-white/10 backdrop-blur-md p-4 text-center border border-white/20 shadow-md hover:-translate-y-1 transition"
+                  >
+                    <p className="text-xs text-slate-400">{label}</p>
+                    <p className="text-xl font-bold">{value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Animated Bars */}
+              <div className="relative">
+                <p className="text-xs text-slate-400 mb-2">Score Trend</p>
+                <div className="flex items-end gap-2 h-24">
+                  {[35, 50, 65, 60, 78, 82].map((v, i) => (
+                    <div
+                      key={i}
+                      className="w-4 rounded-lg bg-sky-400 shadow-lg shadow-sky-400/40 transition-all duration-700 ease-out"
+                      style={{ height: `${v}%` }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Right – Dashboard Preview */}
-        <div className="hidden md:block">
-          <img
-            src="/images/dashboard-preview.png"
-            alt="Dashboard Preview"
-            className="rounded-xl shadow-lg border"
-          />
+        {/* Smooth transition */}
+        <div className="h-32 bg-gradient-to-b from-transparent to-slate-900" />
+      </section>
+
+      {/* ================= WHY ================= */}
+      <section className="max-w-6xl mx-auto px-6 py-24">
+        <h2 className="text-3xl font-bold mb-16 text-center">
+          Why QuizGen?
+        </h2>
+
+        <div className="grid md:grid-cols-2 gap-12">
+          {/* Problem */}
+          <div className="rounded-2xl bg-white/5 border border-red-400/20 p-8 backdrop-blur-xl">
+            <div className="text-3xl mb-4">⚠️</div>
+            <h3 className="font-semibold text-lg mb-2 text-red-300">
+              The Problem
+            </h3>
+            <p className="text-slate-300">
+              Manual quiz creation is slow, analytics are weak, and learners
+              rarely get actionable feedback.
+            </p>
+          </div>
+
+          {/* Solution */}
+          <div className="rounded-2xl bg-sky-500/10 border border-sky-400/30 p-8 backdrop-blur-xl shadow-lg shadow-sky-500/20">
+            <div className="text-3xl mb-4">💡</div>
+            <h3 className="font-semibold text-lg mb-2 text-sky-300">
+              The Solution
+            </h3>
+            <p className="text-slate-200">
+              QuizGen automates question generation and delivers real-time
+              performance insights with adaptive difficulty.
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* ---------------- PROBLEM → SOLUTION ---------------- */}
-      <section className="max-w-6xl mx-auto px-6 py-16">
-        <h2 className="text-2xl font-bold text-[#1F3A5F]">Why QuizGen?</h2>
-
-        <div className="mt-6 grid md:grid-cols-2 gap-10 text-[#64748B]">
-          <div>
-            <h3 className="font-semibold text-[#1E293B]">The Problem</h3>
-            <p className="mt-2">
-              Manual quiz creation is slow, question banks become outdated, and
-              students rarely get clear performance insights.
-            </p>
-          </div>
-          <div>
-            <h3 className="font-semibold text-[#1E293B]">The Solution</h3>
-            <p className="mt-2">
-              QuizGen automates question generation, centralizes quizzes, and provides  
-              simple performance dashboards so learning becomes efficient and transparent.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ---------------- CORE CAPABILITIES ---------------- */}
-      <section className="bg-white py-20 border-t border-b">
+      {/* ================= CAPABILITIES ================= */}
+      <section className="py-28 bg-white/5 border-y border-white/10">
         <div className="max-w-7xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center text-[#1F3A5F]">
+          <h2 className="text-3xl font-bold text-center mb-16">
             Core Capabilities
           </h2>
 
-          <div className="grid md:grid-cols-3 gap-10 mt-12">
+          <div className="grid md:grid-cols-3 gap-10">
             {[
-              {
-                title: "Secure Login & Profiles",
-                desc: "Safe and protected access for every user with personalized progress tracking.",
-              },
-              {
-                title: "Category & Difficulty Selection",
-                desc: "Choose topics and difficulty levels for personalized learning experiences.",
-              },
-              {
-                title: "AI-Generated Questions",
-                desc: "Generate new, relevant questions instantly with AI assistance.",
-              },
-              {
-                title: "Timed Quiz Attempts",
-                desc: "Built-in timer ensures structured and disciplined quiz attempts.",
-              },
-              {
-                title: "Automatic Scoring",
-                desc: "Instant scoring removes manual work and speeds up evaluation.",
-              },
-              {
-                title: "Performance Dashboard",
-                desc: "View score history, improvements, and analytics in one clean interface.",
-              },
-            ].map((item, i) => (
+              ["🔐", "Secure Login & Profiles"],
+              ["🎯", "Category & Difficulty Selection"],
+              ["🤖", "AI-Generated Questions"],
+              ["⏱", "Timed Quiz Attempts"],
+              ["⚡", "Automatic Scoring"],
+              ["📊", "Advanced Analytics Dashboard"],
+            ].map(([icon, title]) => (
               <div
-                key={i}
-                className="p-6 bg-[#F8FAFC] rounded-xl border shadow-sm"
+                key={title}
+                className="rounded-2xl bg-white/5 border border-white/10 p-8 backdrop-blur-xl hover:-translate-y-2 hover:shadow-xl transition duration-300"
               >
-                <h3 className="font-semibold text-[#1E293B]">{item.title}</h3>
-                <p className="text-sm mt-2 text-[#64748B]">{item.desc}</p>
+                <div className="text-3xl mb-4">{icon}</div>
+                <h3 className="font-semibold mb-3">{title}</h3>
+                <p className="text-sm text-slate-300">
+                  Designed for performance, scalability, and measurable learning outcomes.
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ---------------- HOW IT WORKS ---------------- */}
-      <section className="max-w-6xl mx-auto px-6 py-20">
-        <h2 className="text-3xl font-bold text-center text-[#1F3A5F]">
-          How QuizGen Works
-        </h2>
+      {/* ================= FINAL CTA ================= */}
+      <section className="relative py-36 text-center overflow-hidden">
 
-        <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-8 mt-12 text-center">
-          {[
-            "Register and log in",
-            "Choose a category",
-            "Select difficulty",
-            "AI generates questions",
-            "Attempt quiz with timer",
-            "Get score & explanations",
-          ].map((step, i) => (
-            <div key={i}>
-              <div className="w-10 h-10 mx-auto rounded-full bg-[#2BB0A6] text-white flex items-center justify-center font-bold">
-                {i + 1}
-              </div>
-              <p className="mt-3 text-sm text-[#1E293B]">{step}</p>
-            </div>
-          ))}
+        <div className="absolute inset-0 bg-gradient-to-br from-sky-600 to-sky-700" />
+        <div className="absolute inset-0 bg-sky-500/20 blur-[120px]" />
+
+        <div className="relative max-w-4xl mx-auto px-6">
+          <h2 className="text-5xl font-extrabold">
+            Transform the Way You Learn.
+          </h2>
+
+          <p className="mt-6 text-sky-100 text-lg">
+            Smarter quizzes. Better insights. Faster improvement.
+          </p>
+
+          <button
+            onClick={() => navigate("/register")}
+            className="mt-12 bg-white text-sky-600 px-12 py-4 rounded-2xl font-semibold text-lg hover:bg-sky-50 transition shadow-2xl shadow-white/40"
+          >
+            Get Started Free →
+          </button>
         </div>
       </section>
 
-      {/* ---------------- TRUST & RELIABILITY ---------------- */}
-      <section className="bg-white py-16 border-t">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-2xl font-bold text-[#1F3A5F]">Trust & Reliability</h2>
-
-          <ul className="grid md:grid-cols-2 gap-8 mt-6 text-[#64748B]">
-            <li>Secure assessment environment</li>
-            <li>Protected user data</li>
-            <li>Reliable scoring and analytics</li>
-            <li>Designed for ongoing academic use</li>
-          </ul>
-        </div>
-      </section>
-
-      {/* ---------------- PROJECT OUTCOMES ---------------- */}
-      <section className="max-w-6xl mx-auto px-6 py-20">
-        <h2 className="text-2xl font-bold text-[#1F3A5F]">Project outcomes & impact</h2>
-
-        <ul className="mt-4 text-[#64748B] space-y-2">
-          <li>Faster quiz creation — significant time savings.</li>
-          <li>Consistent evaluation across quizzes.</li>
-          <li>Clear insights for learning improvement.</li>
-          <li>Instant answer explanations support learning.</li>
-          <li>Ready for academic deployment.</li>
-        </ul>
-      </section>
-
-      {/* ---------------- FINAL CTA ---------------- */}
-      <section className="bg-[#1F3A5F] text-white py-20 text-center">
-        <h2 className="text-3xl font-bold">Get Started with QuizGen</h2>
-        <p className="opacity-80 mt-2">No payment • Academic access • Instant login</p>
-
-        <button
-          onClick={() => navigate("/register")}
-          className="mt-8 bg-[#F5A623] text-white px-8 py-3 rounded-xl font-semibold hover:opacity-90 transition"
-        >
-          Get Started with QuizGen
-        </button>
-      </section>
-
-      {/* ---------------- FOOTER (UPDATED - NO DEVELOPER SECTION) ---------------- */}
-      <footer className="bg-white border-t">
-        <div className="max-w-7xl mx-auto px-4 py-8 grid md:grid-cols-3 gap-6">
-
-          {/* Column 1 – Project Info */}
-          <div>
-            <h4 className="text-sm font-semibold text-[#1F3A5F]">QuizGen</h4>
-            <p className="mt-2 text-sm text-[#64748B]">
-              Intelligent Quiz Management System with AI-Generated Questions — academic demo and pilot-ready.
-            </p>
-          </div>
-
-          {/* Column 2 – Contact */}
-          <div>
-            <p className="text-xs font-semibold text-[#1E293B]">Contact</p>
-            <p className="mt-2 text-sm text-[#64748B]">quizgen.project@gmail.com</p>
-          </div>
-
-          {/* Column 3 – Resources */}
-          <div>
-            <p className="text-xs font-semibold text-[#1E293B]">Resources</p>
-            <ul className="mt-2 space-y-2 text-sm text-[#64748B]">
-              <li><a href="/docs" className="hover:underline">Documentation</a></li>
-              <li><a href="/github" className="hover:underline">GitHub Repository</a></li>
-              <li><a href="/privacy" className="hover:underline">Privacy Policy</a></li>
-              <li><a href="/terms" className="hover:underline">Terms & Conditions</a></li>
-            </ul>
-          </div>
-
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 py-4 border-t border-slate-100 text-sm text-[#64748B] flex justify-between">
-          <span>© {new Date().getFullYear()} QuizGen</span>
-
-          <div className="flex gap-4">
-            <a href="/privacy" className="hover:underline">Privacy</a>
-            <a href="/terms" className="hover:underline">Terms</a>
-            <a href="/about" className="hover:underline">About</a>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

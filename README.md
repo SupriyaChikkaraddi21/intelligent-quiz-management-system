@@ -1,47 +1,40 @@
-🚀 QuizGen – Intelligent Quiz Management System
+🚀 Intelligent Quiz Management System
 
-A full-stack AI-powered quiz platform built with:
+AI-powered quiz generation platform with classroom management, analytics, and gamification.
 
-Django + Django REST Framework (Backend)
 
-React + Vite + Tailwind (Frontend)
+🔥 Features
 
-OpenAI GPT-4o-mini (AI Quiz Generator)
+AI-generated quizzes
+Challenge & Practice modes
+Classroom system (Teacher & Student roles)
+Leaderboard & gamification
+Email verification system
+Google OAuth login
+Analytics tracking
+PostgreSQL database
 
-MySQL Database
-
-🧠 Overview
-
-QuizGen is an intelligent quiz generator that creates MCQs using AI based on categories and difficulty levels.
-Users can:
-
-✔ Register and log in
-✔ Generate quizzes using AI
-✔ Attempt quizzes
-✔ View score & results
-✔ Check dashboard, progress, and leaderboard
-✔ Update profile + upload avatar
-✔ Work across React + Django seamlessly
 
 🏗 Tech Stack
-Backend
 
+Backend:
 Django
-
 Django REST Framework
+PostgreSQL
 
-Token Authentication
-
-MySQL
-
-OpenAI API
-
-Frontend
-
+Frontend:
 React (Vite)
+TailwindCSS
 
-Tailwind CSS
+Authentication:
+Token Authentication
+Google OAuth
 
+Email Verification (SMTP)
+⚙️ Setup Instructions
+1️⃣ Clone repo
+git clone <https://github.com/SupriyaChikkaraddi21/intelligent-quiz-management-system.git>
+cd intelligent-quiz-management-system
 Axios
 
 Recharts
@@ -56,83 +49,25 @@ cd quizgen
 python -m venv .venv
 
 
-Activate it:
+2️⃣ Create virtual environment
+python -m venv venv
+venv\Scripts\activate
 
-Windows:
-
-.venv\Scripts\activate
-
-3. Install backend requirements
+3️⃣ Install dependencies
 pip install -r requirements.txt
 
-4. Create .env file
+4️⃣ Configure environment
+cp .env.example .env
+Fill credentials.
 
-Create a file named .env in the root folder:
-
-SECRET_KEY=your-django-key
-OPENAI_API_KEY=your-openai-key
-MYSQL_NAME=quizgen
-MYSQL_USER=root
-MYSQL_PASSWORD=12345
-MYSQL_HOST=127.0.0.1
-MYSQL_PORT=3306
-
-5. Run migrations
+5️⃣ Run migrations
 python manage.py migrate
 
-6. Start backend
+6️⃣ Start backend
 python manage.py runserver
 
-
-Backend runs on:
-👉 http://127.0.0.1:8000/
-
-🎨 Frontend Setup (React)
+7️⃣ Start frontend
 cd quiz-frontend
 npm install
 npm run dev
 
-
-Frontend runs on:
-👉 http://localhost:5173/
-
-🔥 API Endpoints Summary
-Endpoint	Method	Description
-/api/accounts/register/	POST	Register user
-/api/accounts/login/	POST	Login + Token
-/api/accounts/profile/	GET	User profile
-/api/quizzes/generate/	POST	Generate quiz using AI
-/api/quizzes/{id}/start/	POST	Start quiz
-/api/attempts/{id}/answer/	POST	Save answer
-/api/attempts/{id}/finish/	POST	Finish quiz
-/api/quizzes/dashboard/	GET	Dashboard data
-/api/quizzes/progress/	GET	Progress graph
-/api/quizzes/leaderboard/	GET	Leaderboard
-🎯 Features
-
-Fully functional Django backend
-
-MySQL supported
-
-AI-generated questions using GPT-4o-mini
-
-Secure Token Login
-
-Beautiful Tailwind UI
-
-Progress tracking + analytics
-
-Clean architecture for teamwork
-
-👥 Collaborators
-
-Add collaborators here once added in GitHub.
-
-📌 License
-
-This project is for educational & internship purposes.
-
-💬 Contact
-
-If you need help:
-Supriya Chikkaraddi 
