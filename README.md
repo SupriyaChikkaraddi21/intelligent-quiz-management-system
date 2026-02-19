@@ -35,6 +35,18 @@ Email Verification (SMTP)
 1️⃣ Clone repo
 git clone <https://github.com/SupriyaChikkaraddi21/intelligent-quiz-management-system.git>
 cd intelligent-quiz-management-system
+Axios
+
+Recharts
+
+📦 Installation & Setup
+🔧 Backend Setup (Django)
+1. Clone the repo
+git clone https://github.com/SupriyaChikkaraddi21/intelligent-quiz-management-system.git
+cd quizgen
+
+2. Create Virtual Environment
+python -m venv .venv
 
 
 2️⃣ Create virtual environment
@@ -59,10 +71,3 @@ cd quiz-frontend
 npm install
 npm run dev
 
-🔐 Email Verification Flow
-User registers
-Account created as inactive
-Verification email sent
-User clicks activation link
-Account activated
-Login allowed
