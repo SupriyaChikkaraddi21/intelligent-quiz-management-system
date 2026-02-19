@@ -142,7 +142,7 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 # BEHAVIOR
 # =====================
 APPEND_SLASH = True
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
 DEFAULT_FROM_EMAIL = "noreply@quizgen.com"
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 

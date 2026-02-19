@@ -33,12 +33,24 @@ export default function Login() {
         password,
       });
 
-      // 🔥 use context login instead of localStorage directly
       await login(res.data.token);
-
       navigate("/dashboard");
-    } catch {
-      setError("Invalid email or password");
+
+    } catch (err) {
+      if (err.response) {
+        const status = err.response.status;
+        const backendMessage = err.response.data?.error;
+
+        if (status === 403) {
+          setError("Please verify your email before logging in.");
+        } else if (status === 401) {
+          setError("Invalid email or password.");
+        } else {
+          setError(backendMessage || "Login failed.");
+        }
+      } else {
+        setError("Server not reachable.");
+      }
     } finally {
       setLoading(false);
     }
@@ -53,28 +65,24 @@ export default function Login() {
         credential: cred.credential,
       });
 
-      // 🔥 use context login
       await login(res.data.token);
-
       navigate("/dashboard");
-    } catch {
-      setError("Google login failed");
+
+    } catch (err) {
+      if (err.response) {
+        setError(err.response.data?.error || "Google login failed.");
+      } else {
+        setError("Server not reachable.");
+      }
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4
-                    bg-gradient-to-br from-slate-50 via-sky-50 to-sky-100"
-    >
-      <div
-        className="w-full max-w-md bg-white rounded-3xl
-                      border border-slate-200
-                      shadow-[0_40px_80px_rgba(0,0,0,0.12)]
-                      p-8"
-      >
+    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-slate-50 via-sky-50 to-sky-100">
+      <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-[0_40px_80px_rgba(0,0,0,0.12)] p-8">
+        
         {/* BRAND */}
         <div className="text-center mb-6">
           <h1 className="text-2xl font-extrabold tracking-tight">
@@ -82,7 +90,6 @@ export default function Login() {
           </h1>
         </div>
 
-        {/* TITLE */}
         <h2 className="text-3xl font-bold text-center mb-2">
           Welcome back
         </h2>
@@ -93,37 +100,27 @@ export default function Login() {
 
         {/* ERROR */}
         {error && (
-          <div
-            className="mb-5 rounded-lg border border-red-300
-                          bg-red-50 px-4 py-2 text-sm text-red-700"
-          >
+          <div className="mb-5 rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-700">
             {error}
           </div>
         )}
 
-        {/* FORM */}
         <form onSubmit={handleLogin} className="space-y-4">
+
           <input
             type="email"
             placeholder="Email address"
-            className="w-full rounded-xl border border-slate-300
-                       px-4 py-3 text-sm
-                       focus:ring-2 focus:ring-sky-400 focus:border-sky-400
-                       outline-none transition"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400 outline-none transition"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
 
-          {/* PASSWORD */}
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Password"
-              className="w-full rounded-xl border border-slate-300
-                         px-4 py-3 pr-11 text-sm
-                         focus:ring-2 focus:ring-sky-400 focus:border-sky-400
-                         outline-none transition"
+              className="w-full rounded-xl border border-slate-300 px-4 py-3 pr-11 text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400 outline-none transition"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -132,8 +129,7 @@ export default function Login() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-3 flex items-center
-                         text-slate-400 hover:text-sky-500 transition"
+              className="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-sky-500 transition"
             >
               {showPassword ? (
                 <EyeSlashIcon className="h-5 w-5" />
@@ -143,7 +139,6 @@ export default function Login() {
             </button>
           </div>
 
-          {/* FORGOT PASSWORD */}
           <div className="flex justify-end text-sm">
             <Link
               to="/forgot-password"
@@ -153,26 +148,20 @@ export default function Login() {
             </Link>
           </div>
 
-          {/* SUBMIT */}
           <button
             disabled={loading}
-            className="w-full rounded-xl bg-sky-500 py-3
-                       font-semibold text-white
-                       hover:bg-sky-600 transition
-                       disabled:opacity-60"
+            className="w-full rounded-xl bg-sky-500 py-3 font-semibold text-white hover:bg-sky-600 transition disabled:opacity-60"
           >
             {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
 
-        {/* DIVIDER */}
         <div className="my-7 flex items-center">
           <div className="flex-1 h-px bg-slate-200" />
           <span className="px-3 text-xs text-slate-500">OR</span>
           <div className="flex-1 h-px bg-slate-200" />
         </div>
 
-        {/* GOOGLE */}
         <div className="flex justify-center">
           <GoogleLogin
             onSuccess={handleGoogleLogin}
@@ -180,7 +169,6 @@ export default function Login() {
           />
         </div>
 
-        {/* FOOTER */}
         <p className="text-center text-sm text-slate-600 mt-8">
           New here?{" "}
           <Link

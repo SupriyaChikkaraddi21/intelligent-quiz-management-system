@@ -19,7 +19,7 @@ from .views import (
     ClassroomAssignmentsView,
     StudentAssignmentsView,
 )
-
+from .views import VerifyEmailView
 account = AccountViewSet.as_view
 
 urlpatterns = [
@@ -30,6 +30,7 @@ urlpatterns = [
     path("register/", register_view, name="register"),
     path("login/", login_view, name="login"),
     path("google-login/", google_login_view, name="google-login"),
+    path("verify/<uidb64>/<token>/", VerifyEmailView.as_view()),
 
     # =========================
     # PROFILE

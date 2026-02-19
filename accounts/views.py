@@ -34,8 +34,14 @@ from .serializers import (
 User = get_user_model()
 
 # ==============================================================
-# REGISTER
+# REGISTER (EMAIL VERIFICATION ENABLED)
 # ==============================================================
+
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.conf import settings
 
 @csrf_exempt
 @api_view(["POST"])
@@ -55,29 +61,37 @@ def register_view(request):
     if User.objects.filter(username=email).exists():
         return Response({"error": "Email already exists"}, status=400)
 
-    # Create user
+    # 🔥 CREATE USER AS INACTIVE
     user = User.objects.create_user(
         username=email,
         email=email,
         password=password,
         first_name=name,
-        is_active=True
+        is_active=False
     )
 
-    # 🔥 DO NOT CREATE PROFILE AGAIN
-    # Signal already created UserProfile
     profile = user.userprofile
     profile.role = role
     profile.save()
 
-    token, _ = Token.objects.get_or_create(user=user)
+    # 🔥 GENERATE VERIFICATION TOKEN
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+
+    verification_link = f"http://localhost:8000/api/v1/accounts/verify/{uid}/{token}/"
+    # 🔥 SEND EMAIL
+    send_mail(
+        subject="Verify your Quiz Account",
+        message=f"Click the link to verify your account:\n\n{verification_link}",
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[email],
+        fail_silently=False,
+    )
 
     return Response({
         "success": True,
-        "token": token.key,
-        "role": profile.role
+        "message": "Account created. Please verify your email."
     }, status=201)
-
 
 # ==============================================================
 # LOGIN
@@ -93,14 +107,20 @@ def login_view(request):
     if not email or not password:
         return Response({"error": "Email and password required"}, status=400)
 
-    user = authenticate(username=email, password=password)
+    user = User.objects.filter(username=email).first()
 
     if not user:
         return Response({"error": "Invalid credentials"}, status=401)
 
-    token, _ = Token.objects.get_or_create(user=user)
-    return Response({"success": True, "token": token.key})
+    if not user.check_password(password):
+        return Response({"error": "Invalid credentials"}, status=401)
 
+    if not user.is_active:
+        return Response({"error": "Please verify your email first"}, status=403)
+
+    token, _ = Token.objects.get_or_create(user=user)
+
+    return Response({"success": True, "token": token.key})
 
 # ==============================================================
 # GOOGLE LOGIN
@@ -438,3 +458,24 @@ class StudentAssignmentsView(APIView):
         ]
 
         return Response(data)
+# ==============================================================
+# VERIFY EMAIL
+# ==============================================================
+
+class VerifyEmailView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, uidb64, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except Exception:
+            return Response({"error": "Invalid link"}, status=400)
+
+        if default_token_generator.check_token(user, token):
+            user.is_active = True
+            user.save()
+            from django.shortcuts import redirect
+            return redirect("http://localhost:5173/login?verified=true")
+        else:
+            return redirect("http://localhost:5173/login?verified=false")
