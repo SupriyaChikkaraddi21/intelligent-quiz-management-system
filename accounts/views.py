@@ -63,7 +63,7 @@ def register_view(request):
 
     # 🔥 CREATE USER AS INACTIVE
     user = User.objects.create_user(
-        username=email,
+        username=name.replace(" ", "").lower(),
         email=email,
         password=password,
         first_name=name,
