@@ -159,3 +159,16 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+from django.contrib.auth import get_user_model
+
+def reset_admin_password():
+    User = get_user_model()
+    try:
+        user = User.objects.get(username="admin")
+        user.set_password("admin123")
+        user.save()
+        print("Password reset successfully")
+    except:
+        print("Admin not found")
+
+reset_admin_password()
