@@ -1,20 +1,20 @@
 // src/api/api.js
 import axios from "axios";
 
-// ================================
-// BASE API INSTANCE
-// ================================
+// ==========================================
+// BASE API INSTANCE (PRODUCTION READY)
+// ==========================================
 const api = axios.create({
-  baseURL: "http://localhost:8000/api/v1/", // ✅ UPDATED TO v1
+  baseURL: import.meta.env.VITE_API_URL,
   headers: {
     "Content-Type": "application/json",
   },
   withCredentials: false,
 });
 
-// ================================
+// ==========================================
 // REQUEST INTERCEPTOR (AUTH TOKEN)
-// ================================
+// ==========================================
 api.interceptors.request.use(
   (config) => {
     try {
@@ -23,16 +23,16 @@ api.interceptors.request.use(
         config.headers.Authorization = `Token ${token}`;
       }
     } catch (e) {
-      // ignore localStorage access issues
+      // ignore localStorage issues
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// ================================
+// ==========================================
 // RESPONSE INTERCEPTOR
-// ================================
+// ==========================================
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -47,19 +47,16 @@ api.interceptors.response.use(
   }
 );
 
-// =======================================================
-// USER QUIZ HELPERS (UNCHANGED)
-// =======================================================
+// ==========================================
+// USER QUIZ HELPERS
+// ==========================================
 
-// Fetch single user-created quiz (for edit)
 export const getUserQuizById = (quizId) =>
   api.get(`/quiz/${quizId}/`);
 
-// Update existing user quiz
 export const updateUserQuiz = (quizId, payload) =>
   api.put(`/quiz/${quizId}/update/`, payload);
 
-// Optional: delete quiz (future-safe)
 export const deleteUserQuiz = (quizId) =>
   api.delete(`/quiz/${quizId}/delete/`);
 
