@@ -136,7 +136,7 @@ def login_view(request):
     if not email or not password:
         return Response({"error": "Email and password required"}, status=400)
 
-    user = User.objects.filter(username=email).first()
+    user = User.objects.filter(email=email).first()
 
     if not user:
         return Response({"error": "Invalid credentials"}, status=401)
