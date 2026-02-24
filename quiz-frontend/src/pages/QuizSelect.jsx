@@ -131,7 +131,7 @@ export default function QuizSelect() {
           <div className="pt-4 flex gap-4">
             <PrimaryButton
               large
-              onClick={() => navigate("/create-quiz")}
+              onClick={() => navigate("/create")}
             >
               + Create Quiz
             </PrimaryButton>
