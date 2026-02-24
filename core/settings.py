@@ -164,3 +164,6 @@ CSRF_TRUSTED_ORIGINS = [
     origin for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
     if origin
 ]
+
+
+CORS_ALLOW_CREDENTIALS = True
