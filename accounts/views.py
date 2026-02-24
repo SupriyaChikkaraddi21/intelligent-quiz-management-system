@@ -80,13 +80,16 @@ def register_view(request):
 
     verification_link = f"http://localhost:8000/api/v1/accounts/verify/{uid}/{token}/"
     # 🔥 SEND EMAIL
+    try:
     send_mail(
         subject="Verify your Quiz Account",
-        message=f"Click the link to verify your account:\n\n{verification_link}",
+        message=f"...",
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
-        fail_silently=False,
+        fail_silently=True,
     )
+    except Exception:
+        pass
 
     return Response({
         "success": True,
