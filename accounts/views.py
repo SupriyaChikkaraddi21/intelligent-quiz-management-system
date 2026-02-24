@@ -43,6 +43,16 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.conf import settings
 
+# ==============================================================
+# REGISTER (EMAIL VERIFICATION ENABLED)
+# ==============================================================
+
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.conf import settings
+
 @csrf_exempt
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -61,41 +71,57 @@ def register_view(request):
     if User.objects.filter(email=email).exists():
         return Response({"error": "Email already exists"}, status=400)
 
-    # 🔥 CREATE USER AS INACTIVE
+    # ✅ CREATE USER AS ACTIVE (NO VERIFICATION)
     user = User.objects.create_user(
         username=email,
         email=email,
         password=password,
         first_name=name,
-        is_active=False
+        is_active=True
     )
 
     profile = user.userprofile
     profile.role = role
     profile.save()
 
-    # 🔥 GENERATE VERIFICATION TOKEN
-    uid = urlsafe_base64_encode(force_bytes(user.pk))
-    token = default_token_generator.make_token(user)
+    return Response({
+        "success": True,
+        "message": "Account created successfully."
+    }, status=201)@csrf_exempt
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def register_view(request):
+    name = request.data.get("name")
+    email = request.data.get("email")
+    password = request.data.get("password")
+    role = request.data.get("role", "student")
 
-    verification_link = f"http://localhost:8000/api/v1/accounts/verify/{uid}/{token}/"
-    # 🔥 SEND EMAIL
-    try:
-    send_mail(
-        subject="Verify your Quiz Account",
-        message=f"...",
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        fail_silently=True,
+    if not name or not email or not password:
+        return Response({"error": "All fields are required"}, status=400)
+
+    if role not in ["student", "teacher"]:
+        return Response({"error": "Invalid role"}, status=400)
+
+    if User.objects.filter(email=email).exists():
+        return Response({"error": "Email already exists"}, status=400)
+
+    # ✅ CREATE USER AS ACTIVE (NO VERIFICATION)
+    user = User.objects.create_user(
+        username=email,
+        email=email,
+        password=password,
+        first_name=name,
+        is_active=True
     )
-    except Exception:
-        pass
+
+    profile = user.userprofile
+    profile.role = role
+    profile.save()
 
     return Response({
         "success": True,
-        "message": "Account created. Please verify your email."
+        "message": "Account created successfully."
     }, status=201)
-
 # ==============================================================
 # LOGIN
 # ==============================================================
