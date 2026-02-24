@@ -175,14 +175,18 @@ def google_login_view(request):
         email = info.get("email")
         name = info.get("name", "")
 
-        user, created = User.objects.get_or_create(
-            username=email,
-            defaults={
-                "email": email,
-                "first_name": name,
-                "is_active": True
-            }
-        )
+        user = User.objects.filter(email=email).first()
+
+        if not user:
+            user = User.objects.create(
+                username=email,
+                email=email,
+                first_name=name,
+                is_active=True
+            )
+            user.set_unusable_password()
+            user.save()
+        UserProfile.objects.get_or_create(user=user)
 
         if created:
             user.set_unusable_password()
