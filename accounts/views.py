@@ -189,7 +189,8 @@ def google_login_view(request):
             user.save()
             UserProfile.objects.get_or_create(user=user)
 
-        token, _ = Token.objects.get_or_create(user=user)
+        Token.objects.filter(user=user).delete()
+        token = Token.objects.create(user=user)
         return Response({"success": True, "token": token.key})
 
     except Exception:
