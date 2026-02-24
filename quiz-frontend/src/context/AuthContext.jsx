@@ -14,6 +14,7 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error("Auth error:", error);
       localStorage.removeItem("token");
+      delete api.defaults.headers.common["Authorization"];
       setUser(null);
     } finally {
       setLoading(false);
@@ -21,13 +22,19 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (token) => {
+    // 🔥 Save token
     localStorage.setItem("token", token);
+
+    // 🔥 Attach token globally to axios
+    api.defaults.headers.common["Authorization"] = `Token ${token}`;
+
     setLoading(true);
     await fetchUser();
   };
 
   const logout = () => {
     localStorage.removeItem("token");
+    delete api.defaults.headers.common["Authorization"];
     setUser(null);
   };
 
@@ -39,6 +46,9 @@ export function AuthProvider({ children }) {
       setLoading(false);
       return;
     }
+
+    // 🔥 Re-attach token on page refresh
+    api.defaults.headers.common["Authorization"] = `Token ${token}`;
 
     fetchUser();
   }, [fetchUser]);
@@ -52,6 +62,8 @@ export function AuthProvider({ children }) {
         login,
         logout,
       }}
+    >
+      {children}
     >
       {children}
     </AuthContext.Provider>
