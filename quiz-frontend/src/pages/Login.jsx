@@ -34,7 +34,7 @@ export default function Login() {
       });
 
       await login(res.data.token);
-      navigate("/dashboard");
+      setTimeout(() => {navigate("/dashboard");},100);
 
     } catch (err) {
       if (err.response) {

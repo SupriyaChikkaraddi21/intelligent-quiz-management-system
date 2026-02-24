@@ -7,49 +7,60 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // 🔹 Fetch logged-in user
   const fetchUser = useCallback(async () => {
     try {
       const res = await api.get("/accounts/profile/");
       setUser(res.data);
     } catch (error) {
-      console.error("Auth error:", error);
-      localStorage.removeItem("token");
-      delete api.defaults.headers.common["Authorization"];
-      setUser(null);
+      console.error("Auth error:", error?.response?.status);
+
+      // ❗ Only logout if token is truly invalid
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        delete api.defaults.headers.common["Authorization"];
+        setUser(null);
+      }
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // 🔹 Login handler
   const login = async (token) => {
-    // 🔥 Save token
+    // save token
     localStorage.setItem("token", token);
 
-    // 🔥 Attach token globally to axios
+    // attach token globally
     api.defaults.headers.common["Authorization"] = `Token ${token}`;
 
-    setLoading(true);
-    await fetchUser();
+    try {
+      const res = await api.get("/accounts/profile/");
+      setUser(res.data);
+    } catch (err) {
+      console.error("Profile fetch failed after login", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // 🔹 Logout
   const logout = () => {
     localStorage.removeItem("token");
     delete api.defaults.headers.common["Authorization"];
     setUser(null);
   };
 
+  // 🔹 Restore session on refresh
   useEffect(() => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      setUser(null);
       setLoading(false);
       return;
     }
 
-    // 🔥 Re-attach token on page refresh
     api.defaults.headers.common["Authorization"] = `Token ${token}`;
-
     fetchUser();
   }, [fetchUser]);
 
@@ -62,8 +73,6 @@ export function AuthProvider({ children }) {
         login,
         logout,
       }}
-    >
-      {children}
     >
       {children}
     </AuthContext.Provider>

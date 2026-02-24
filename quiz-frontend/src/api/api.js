@@ -1,19 +1,15 @@
-// src/api/api.js
 import axios from "axios";
 
 // ==========================================
-// BASE API INSTANCE (PRODUCTION READY)
+// BASE API INSTANCE
 // ==========================================
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
   withCredentials: false,
 });
 
 // ==========================================
-// REQUEST INTERCEPTOR (AUTH TOKEN)
+// REQUEST INTERCEPTOR (ATTACH TOKEN)
 // ==========================================
 api.interceptors.request.use(
   (config) => {
@@ -23,7 +19,7 @@ api.interceptors.request.use(
         config.headers.Authorization = `Token ${token}`;
       }
     } catch (e) {
-      // ignore localStorage issues
+      // ignore storage issues
     }
     return config;
   },
@@ -36,13 +32,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error?.response?.status === 401) {
+    const status = error?.response?.status;
+
+    // ❗ Only clear token if authentication is truly invalid
+    if (status === 401 && error.config?.url?.includes("/accounts/profile")) {
       try {
         localStorage.removeItem("token");
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
     }
+
     return Promise.reject(error);
   }
 );
