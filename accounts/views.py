@@ -58,7 +58,7 @@ def register_view(request):
     if role not in ["student", "teacher"]:
         return Response({"error": "Invalid role"}, status=400)
 
-    if User.objects.filter(username=email).exists():
+    if User.objects.filter(email=email).exists():
         return Response({"error": "Email already exists"}, status=400)
 
     # 🔥 CREATE USER AS INACTIVE
