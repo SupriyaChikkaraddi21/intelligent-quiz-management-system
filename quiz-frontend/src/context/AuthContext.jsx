@@ -7,7 +7,9 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔹 Fetch logged-in user
+  // =============================
+  // FETCH CURRENT USER
+  // =============================
   const fetchUser = useCallback(async () => {
     try {
       const res = await api.get("/accounts/profile/");
@@ -15,9 +17,8 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error("Auth error:", error?.response?.status);
 
-      // ⚠️ IMPORTANT:
-      // Do NOT remove token here.
-      // A 401 can happen during initial login race.
+      // ❗ Do NOT remove token here
+      // 401 may happen during login race
       if (error.response?.status === 401) {
         setUser(null);
       }
@@ -26,8 +27,10 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // 🔹 Login handler
-  const login = async (token) => {
+  // =============================
+  // LOGIN
+  // =============================
+  const login = async (token, userData = null) => {
     if (!token) return;
 
     // save token
@@ -36,18 +39,29 @@ export function AuthProvider({ children }) {
     // attach token globally
     api.defaults.headers.common["Authorization"] = `Token ${token}`;
 
-    // fetch user using same logic
+    // if profile already fetched → avoid extra call
+    if (userData) {
+      setUser(userData);
+      setLoading(false);
+      return;
+    }
+
+    // otherwise fetch profile once
     await fetchUser();
   };
 
-  // 🔹 Logout
+  // =============================
+  // LOGOUT
+  // =============================
   const logout = () => {
     localStorage.removeItem("token");
     delete api.defaults.headers.common["Authorization"];
     setUser(null);
   };
 
-  // 🔹 Restore session on refresh
+  // =============================
+  // RESTORE SESSION ON REFRESH
+  // =============================
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -56,9 +70,9 @@ export function AuthProvider({ children }) {
       return;
     }
 
+    // attach header BEFORE fetching
     api.defaults.headers.common["Authorization"] = `Token ${token}`;
 
-    // ensure fetch happens AFTER header is set
     fetchUser();
   }, [fetchUser]);
 

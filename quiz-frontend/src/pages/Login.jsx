@@ -57,27 +57,37 @@ export default function Login() {
   }
 
   async function handleGoogleLogin(cred) {
-    setError("");
-    setLoading(true);
+  setError("");
+  setLoading(true);
 
-    try {
-      const res = await api.post("/accounts/google-login/", {
-        credential: cred.credential,
-      });
+  try {
+    const res = await api.post("/accounts/google-login/", {
+      credential: cred.credential,
+    });
 
-      await login(res.data.token);
-      navigate("/dashboard");
+    const token = res.data.token;
 
-    } catch (err) {
-      if (err.response) {
-        setError(err.response.data?.error || "Google login failed.");
-      } else {
-        setError("Server not reachable.");
-      }
-    } finally {
-      setLoading(false);
+    if (!token) {
+      throw new Error("Token missing from response");
     }
+
+    // save token FIRST
+    localStorage.setItem("token", token);
+    api.defaults.headers.common["Authorization"] = `Token ${token}`;
+
+    // fetch profile to confirm login
+    const profile = await api.get("/accounts/profile/");
+    login(token, profile.data);   // 👈 pass data
+
+    navigate("/dashboard");
+
+  } catch (err) {
+    console.error("Google login error:", err);
+    setError("Google login failed");
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-slate-50 via-sky-50 to-sky-100">
