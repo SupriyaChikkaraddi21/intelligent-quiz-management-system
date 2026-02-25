@@ -1,4 +1,5 @@
 // src/pages/Login.jsx
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/api";
@@ -35,16 +36,10 @@ export default function Login() {
       });
 
       const token = res.data.token;
+      if (!token) throw new Error("Token missing");
 
-      // ✅ save token
-      localStorage.setItem("token", token);
-
-      // ✅ fetch profile WITH header (prevents race)
-      const profileRes = await api.get("/accounts/profile/", {
-        headers: { Authorization: `Token ${token}` },
-      });
-
-      login(token, profileRes.data);
+      // ✅ ONLY call context login
+      await login(token);
 
       navigate("/dashboard");
     } catch (err) {
@@ -76,20 +71,12 @@ export default function Login() {
       const token = res.data.token;
       if (!token) throw new Error("Token missing");
 
-      // ✅ store token
-      localStorage.setItem("token", token);
-
-      // ✅ fetch profile WITH HEADER (critical fix)
-      const profileRes = await api.get("/accounts/profile/", {
-        headers: { Authorization: `Token ${token}` },
-      });
-
-      // ✅ update auth context
-      login(token, profileRes.data);
+      // ✅ ONLY login through context
+      await login(token);
 
       navigate("/dashboard");
     } catch (err) {
-      console.error("Google login error:", err);
+      console.error(err);
       setError("Google login failed");
     } finally {
       setLoading(false);
