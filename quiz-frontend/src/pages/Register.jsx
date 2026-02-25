@@ -11,7 +11,7 @@ export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("student"); // 🔥 NEW
+  const [role, setRole] = useState("student");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,7 +32,7 @@ export default function Register() {
         name,
         email,
         password,
-        role, // 🔥 SEND ROLE
+        role,
       });
 
       navigate("/login");
@@ -46,13 +46,14 @@ export default function Register() {
     }
   }
 
-  function handleGoogleSignup(cred) {
+  // ✅ FIXED GOOGLE HANDLER
+  function handleGoogleSignup(credentialResponse, selectedRole) {
     setError("");
 
     api
       .post("/accounts/google-login/", {
-        credential: cred.credential,
-        role, // 🔥 optional: pass role for google too (backend can ignore if needed)
+        credential: credentialResponse.credential,
+        role: selectedRole,
       })
       .then(() => navigate("/login"))
       .catch(() => setError("Google signup failed"));
@@ -67,14 +68,12 @@ export default function Register() {
                       shadow-[0_40px_80px_rgba(0,0,0,0.12)]
                       p-8">
 
-        {/* BRAND */}
         <div className="text-center mb-6">
           <h1 className="text-2xl font-extrabold tracking-tight">
             Quiz<span className="text-sky-500">Gen</span>
           </h1>
         </div>
 
-        {/* TITLE */}
         <h2 className="text-3xl font-bold text-center mb-2">
           Create your account
         </h2>
@@ -83,7 +82,6 @@ export default function Register() {
           Start learning smarter with AI-powered quizzes
         </p>
 
-        {/* ERROR */}
         {error && (
           <div className="mb-5 rounded-lg border border-red-300
                           bg-red-50 px-4 py-2 text-sm text-red-700">
@@ -91,7 +89,6 @@ export default function Register() {
           </div>
         )}
 
-        {/* FORM */}
         <form onSubmit={handleRegister} className="space-y-4">
 
           <input
@@ -118,7 +115,7 @@ export default function Register() {
             required
           />
 
-          {/* 🔥 ROLE SELECTOR */}
+          {/* ROLE SELECTOR */}
           <div>
             <label className="block text-xs font-semibold text-slate-500 mb-1">
               I am registering as
@@ -137,7 +134,6 @@ export default function Register() {
             </select>
           </div>
 
-          {/* PASSWORD */}
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
@@ -165,7 +161,6 @@ export default function Register() {
             </button>
           </div>
 
-          {/* SUBMIT */}
           <button
             disabled={loading}
             className="w-full rounded-xl bg-sky-500 py-3
@@ -177,22 +172,22 @@ export default function Register() {
           </button>
         </form>
 
-        {/* DIVIDER */}
         <div className="my-7 flex items-center">
           <div className="flex-1 h-px bg-slate-200" />
           <span className="px-3 text-xs text-slate-500">OR</span>
           <div className="flex-1 h-px bg-slate-200" />
         </div>
 
-        {/* GOOGLE */}
+        {/* GOOGLE FIXED */}
         <div className="flex justify-center">
           <GoogleLogin
-            onSuccess={handleGoogleSignup}
+            onSuccess={(credentialResponse) =>
+              handleGoogleSignup(credentialResponse, role)
+            }
             onError={() => setError("Google signup failed")}
           />
         </div>
 
-        {/* FOOTER */}
         <p className="text-center text-sm text-slate-600 mt-8">
           Already have an account?{" "}
           <Link
