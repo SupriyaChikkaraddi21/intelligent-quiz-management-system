@@ -87,40 +87,6 @@ def register_view(request):
     return Response({
         "success": True,
         "message": "Account created successfully."
-    }, status=201)@csrf_exempt
-@api_view(["POST"])
-@permission_classes([AllowAny])
-def register_view(request):
-    name = request.data.get("name")
-    email = request.data.get("email")
-    password = request.data.get("password")
-    role = request.data.get("role", "student")
-
-    if not name or not email or not password:
-        return Response({"error": "All fields are required"}, status=400)
-
-    if role not in ["student", "teacher"]:
-        return Response({"error": "Invalid role"}, status=400)
-
-    if User.objects.filter(email=email).exists():
-        return Response({"error": "Email already exists"}, status=400)
-
-    # ✅ CREATE USER AS ACTIVE (NO VERIFICATION)
-    user = User.objects.create_user(
-        username=email,
-        email=email,
-        password=password,
-        first_name=name,
-        is_active=True
-    )
-
-    profile = user.userprofile
-    profile.role = role
-    profile.save()
-
-    return Response({
-        "success": True,
-        "message": "Account created successfully."
     }, status=201)
 # ==============================================================
 # LOGIN
@@ -144,8 +110,7 @@ def login_view(request):
     if not user.check_password(password):
         return Response({"error": "Invalid credentials"}, status=401)
 
-    if not user.is_active:
-        return Response({"error": "Please verify your email first"}, status=403)
+    
 
     token, _ = Token.objects.get_or_create(user=user)
 
@@ -161,7 +126,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from .models import UserProfile
 import os
@@ -549,6 +513,6 @@ class VerifyEmailView(APIView):
             user.is_active = True
             user.save()
             from django.shortcuts import redirect
-            return redirect("http://localhost:5173/login?verified=true")
+            return redirect(return redirect("https://intelligent-quiz-management-system.vercel.app/login?verified=true"))
         else:
-            return redirect("http://localhost:5173/login?verified=false")
+            return redirect(return redirect("https://intelligent-quiz-management-system.vercel.app/login?verified=false"))
