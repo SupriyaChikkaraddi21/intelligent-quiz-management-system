@@ -4,7 +4,6 @@ from django.contrib.auth import authenticate, get_user_model
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.shortcuts import get_object_or_404
-from django.db import models
 import os
 import random
 import string
@@ -33,15 +32,6 @@ from .serializers import (
 
 User = get_user_model()
 
-# ==============================================================
-# REGISTER (EMAIL VERIFICATION ENABLED)
-# ==============================================================
-
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
-from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
-from django.conf import settings
 
 # ==============================================================
 # REGISTER (EMAIL VERIFICATION ENABLED)
@@ -499,6 +489,8 @@ class StudentAssignmentsView(APIView):
 # VERIFY EMAIL
 # ==============================================================
 
+from django.shortcuts import redirect
+
 class VerifyEmailView(APIView):
     permission_classes = [AllowAny]
 
@@ -512,7 +504,6 @@ class VerifyEmailView(APIView):
         if default_token_generator.check_token(user, token):
             user.is_active = True
             user.save()
-            from django.shortcuts import redirect
-            return redirect(return redirect("https://intelligent-quiz-management-system.vercel.app/login?verified=true"))
+            return redirect("https://intelligent-quiz-management-system.vercel.app/login?verified=true")
         else:
-            return redirect(return redirect("https://intelligent-quiz-management-system.vercel.app/login?verified=false"))
+            return redirect("https://intelligent-quiz-management-system.vercel.app/login?verified=false")
