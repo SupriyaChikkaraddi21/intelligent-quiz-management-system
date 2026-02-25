@@ -62,6 +62,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "core.urls"
 WSGI_APPLICATION = "core.wsgi.application"
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # =====================================================
 # TEMPLATES (FIXED – REQUIRED FOR ADMIN)
@@ -137,6 +138,12 @@ CORS_ALLOWED_ORIGINS = [
 
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
+
+from corsheaders.defaults import default_headers
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "authorization",
+]
 
 # =====================================================
 # EMAIL

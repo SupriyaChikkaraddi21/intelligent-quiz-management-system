@@ -15,10 +15,10 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error("Auth error:", error?.response?.status);
 
-      // ❗ Only logout if token is truly invalid
+      // ⚠️ IMPORTANT:
+      // Do NOT remove token here.
+      // A 401 can happen during initial login race.
       if (error.response?.status === 401) {
-        localStorage.removeItem("token");
-        delete api.defaults.headers.common["Authorization"];
         setUser(null);
       }
     } finally {
@@ -28,20 +28,16 @@ export function AuthProvider({ children }) {
 
   // 🔹 Login handler
   const login = async (token) => {
+    if (!token) return;
+
     // save token
     localStorage.setItem("token", token);
 
     // attach token globally
     api.defaults.headers.common["Authorization"] = `Token ${token}`;
 
-    try {
-      const res = await api.get("/accounts/profile/");
-      setUser(res.data);
-    } catch (err) {
-      console.error("Profile fetch failed after login", err);
-    } finally {
-      setLoading(false);
-    }
+    // fetch user using same logic
+    await fetchUser();
   };
 
   // 🔹 Logout
@@ -61,6 +57,8 @@ export function AuthProvider({ children }) {
     }
 
     api.defaults.headers.common["Authorization"] = `Token ${token}`;
+
+    // ensure fetch happens AFTER header is set
     fetchUser();
   }, [fetchUser]);
 
