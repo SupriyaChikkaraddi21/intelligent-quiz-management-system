@@ -57,38 +57,35 @@ export default function Login() {
   }
 
   async function handleGoogleLogin(cred) {
-  setError("");
-  setLoading(true);
+    setError("");
+    setLoading(true);
+    try {
+      const res = await api.post("/accounts/google-login/", {
+        credential: cred.credential,
+      });
 
-  try {
-    const res = await api.post("/accounts/google-login/", {
-      credential: cred.credential,
-    });
+      const token = res.data.token;
 
-    const token = res.data.token;
+      if (!token) throw new Error("Token missing");
 
-    if (!token) {
-      throw new Error("Token missing from response");
+      // ✅ save token
+      localStorage.setItem("token", token);
+  api.defaults.headers.common["Authorization"] = `Token ${token}`;
+
+    // ✅ fetch profile manually
+      const profileRes = await api.get("/accounts/profile/");
+
+    // ✅ pass user directly (stops race condition)
+      await login(token, profileRes.data);
+
+      navigate("/dashboard");
+    } catch (err) {
+      console.error("Google login error:", err);
+      setError("Google login failed");
+    } finally {
+      setLoading(false);
     }
-
-    // save token FIRST
-    localStorage.setItem("token", token);
-    api.defaults.headers.common["Authorization"] = `Token ${token}`;
-
-    // fetch profile to confirm login
-    const profile = await api.get("/accounts/profile/");
-    login(token, profile.data);   // 👈 pass data
-
-    navigate("/dashboard");
-
-  } catch (err) {
-    console.error("Google login error:", err);
-    setError("Google login failed");
-  } finally {
-    setLoading(false);
   }
-}
-
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-slate-50 via-sky-50 to-sky-100">
       <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-[0_40px_80px_rgba(0,0,0,0.12)] p-8">
