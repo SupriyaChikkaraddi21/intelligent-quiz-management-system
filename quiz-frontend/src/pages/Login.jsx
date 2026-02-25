@@ -164,8 +164,10 @@ export default function Login() {
 
         <div className="flex justify-center">
           <GoogleLogin
-            onSuccess={handleGoogleLogin}
-            onError={() => setError("Google login failed")}
+          onSuccess={handleGoogleLogin}
+          onError={() => setError("Google login failed")}
+          auto_select={false}
+          useOneTap={false}
           />
         </div>
 

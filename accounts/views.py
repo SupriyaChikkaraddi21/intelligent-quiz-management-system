@@ -155,6 +155,18 @@ def login_view(request):
 # GOOGLE LOGIN
 # ==============================================================
 
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
+from .models import UserProfile
+import os
+
+
 @csrf_exempt
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -162,43 +174,72 @@ def google_login_view(request):
     google_token = request.data.get("credential")
     CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 
-    if not google_token or not CLIENT_ID:
-        return Response({"error": "Invalid request"}, status=400)
+    # 🔍 DEBUG (will show in Render logs)
+    print("GOOGLE_CLIENT_ID:", CLIENT_ID)
+    print("TOKEN RECEIVED:", google_token[:30] if google_token else None)
+
+    if not google_token:
+        return Response({"error": "Missing credential"}, status=400)
+
+    if not CLIENT_ID:
+        return Response({"error": "Server misconfigured (CLIENT_ID missing)"}, status=500)
 
     try:
-        info = id_token.verify_oauth2_token(
+        # ✅ Verify Google token
+        idinfo = id_token.verify_oauth2_token(
             google_token,
             google_requests.Request(),
-            CLIENT_ID
+            CLIENT_ID,
         )
 
-        email = info.get("email")
-        name = info.get("name", "")
+        # ✅ Validate issuer (security check)
+        if idinfo["iss"] not in ["accounts.google.com", "https://accounts.google.com"]:
+            return Response({"error": "Invalid token issuer"}, status=401)
 
+        email = idinfo.get("email")
+        name = idinfo.get("name", "")
+        email_verified = idinfo.get("email_verified", False)
+
+        if not email or not email_verified:
+            return Response({"error": "Email not verified by Google"}, status=401)
+
+        # ✅ Create or fetch user
         user, created = User.objects.get_or_create(
             email=email,
             defaults={
                 "username": email,
                 "first_name": name,
                 "is_active": True,
-            }
+            },
         )
 
         if created:
             user.set_unusable_password()
             user.save()
 
+        # ✅ Ensure profile exists
         UserProfile.objects.get_or_create(user=user)
 
+        # ✅ Create fresh token
         Token.objects.filter(user=user).delete()
         token = Token.objects.create(user=user)
 
-        return Response({"success": True, "token": token.key})
+        return Response({
+            "success": True,
+            "token": token.key,
+            "email": email,
+            "name": name,
+        })
+
+    except ValueError as e:
+        # Token invalid / audience mismatch
+        print("GOOGLE VERIFY ERROR:", e)
+        return Response({"error": "Invalid Google token", "details": str(e)}, status=401)
 
     except Exception as e:
-        print("GOOGLE VERIFY ERROR:", e)
-        return Response({"error": str(e)}, status=401)
-
+        # Unexpected failure
+        print("UNEXPECTED GOOGLE LOGIN ERROR:", e)
+        return Response({"error": "Google login failed"}, status=500)
 # ==============================================================
 # PROFILE VIEWSET
 # ==============================================================
