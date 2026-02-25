@@ -124,7 +124,6 @@ def google_login_view(request):
     google_token = request.data.get("credential")
     CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 
-    # 🔍 DEBUG (will show in Render logs)
     print("GOOGLE_CLIENT_ID:", CLIENT_ID)
     print("TOKEN RECEIVED:", google_token[:30] if google_token else None)
 
@@ -135,14 +134,12 @@ def google_login_view(request):
         return Response({"error": "Server misconfigured (CLIENT_ID missing)"}, status=500)
 
     try:
-        # ✅ Verify Google token
         idinfo = id_token.verify_oauth2_token(
             google_token,
             google_requests.Request(),
             CLIENT_ID,
         )
 
-        # ✅ Validate issuer (security check)
         if idinfo["iss"] not in ["accounts.google.com", "https://accounts.google.com"]:
             return Response({"error": "Invalid token issuer"}, status=401)
 
@@ -153,7 +150,7 @@ def google_login_view(request):
         if not email or not email_verified:
             return Response({"error": "Email not verified by Google"}, status=401)
 
-        # ✅ Create or fetch user
+        # 🔥 FIX: Handle existing inactive users
         user, created = User.objects.get_or_create(
             email=email,
             defaults={
@@ -165,12 +162,19 @@ def google_login_view(request):
 
         if created:
             user.set_unusable_password()
-            user.save()
+        else:
+            # ✅ Force activate existing users
+            if not user.is_active:
+                user.is_active = True
 
-        # ✅ Ensure profile exists
+            # Update name if empty
+            if not user.first_name:
+                user.first_name = name
+
+        user.save()
+
         UserProfile.objects.get_or_create(user=user)
 
-        # ✅ Create fresh token
         Token.objects.filter(user=user).delete()
         token = Token.objects.create(user=user)
 
@@ -182,12 +186,10 @@ def google_login_view(request):
         })
 
     except ValueError as e:
-        # Token invalid / audience mismatch
         print("GOOGLE VERIFY ERROR:", e)
         return Response({"error": "Invalid Google token", "details": str(e)}, status=401)
 
     except Exception as e:
-        # Unexpected failure
         print("UNEXPECTED GOOGLE LOGIN ERROR:", e)
         return Response({"error": "Google login failed"}, status=500)
 # ==============================================================
