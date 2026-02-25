@@ -6,10 +6,9 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [fetching, setFetching] = useState(false); // prevent duplicate calls
 
   // =============================
-  // ATTACH TOKEN HEADER SAFELY
+  // ATTACH TOKEN HEADER
   // =============================
   const setAuthHeader = (token) => {
     if (token) {
@@ -23,9 +22,6 @@ export function AuthProvider({ children }) {
   // FETCH CURRENT USER
   // =============================
   const fetchUser = useCallback(async () => {
-    if (fetching) return; // prevent parallel calls
-    setFetching(true);
-
     try {
       const res = await api.get("/accounts/profile/");
       setUser(res.data);
@@ -37,9 +33,8 @@ export function AuthProvider({ children }) {
       }
     } finally {
       setLoading(false);
-      setFetching(false);
     }
-  }, [fetching]);
+  }, []);
 
   // =============================
   // LOGIN
@@ -48,11 +43,9 @@ export function AuthProvider({ children }) {
     if (!token) return;
 
     localStorage.setItem("token", token);
-
-    // attach header BEFORE anything else
     setAuthHeader(token);
 
-    // if user already fetched (Google login flow)
+    // if profile already fetched (Google flow)
     if (userData) {
       setUser(userData);
       setLoading(false);
@@ -72,7 +65,7 @@ export function AuthProvider({ children }) {
   };
 
   // =============================
-  // RESTORE SESSION
+  // RESTORE SESSION ON REFRESH
   // =============================
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -82,11 +75,11 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    // attach header BEFORE fetching
     setAuthHeader(token);
-
     fetchUser();
-  }, [fetchUser]);
+
+    // ❗ IMPORTANT: empty dependency array
+  }, []);
 
   return (
     <AuthContext.Provider

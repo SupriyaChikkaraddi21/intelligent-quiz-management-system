@@ -1,118 +1,79 @@
 # accounts/urls.py
-from .views import AssignQuizView, ClassroomAssignmentsView
 
 from django.urls import path
 from .views import (
-    register_view,
-    login_view,
-    google_login_view,
-    AccountViewSet,
-
-    # Classroom views
-    CreateClassroomView,
-    JoinClassroomView,
-    MyClassroomsView,
-    ClassroomDetailView,
-    LeaveClassroomView,
-    TeacherQuizzesView,
-    AssignQuizView,
-    ClassroomAssignmentsView,
-    StudentAssignmentsView,
+register_view,
+login_view,
+google_login_view,
+AccountViewSet,
+CreateClassroomView,
+JoinClassroomView,
+MyClassroomsView,
+ClassroomDetailView,
+LeaveClassroomView,
+TeacherQuizzesView,
+AssignQuizView,
+ClassroomAssignmentsView,
+StudentAssignmentsView,
 )
-from .views import VerifyEmailView
+
+# ✅ bind ViewSet correctly
+
 account = AccountViewSet.as_view
 
 urlpatterns = [
 
-    # =========================
-    # AUTH
-    # =========================
-    path("register/", register_view, name="register"),
-    path("login/", login_view, name="login"),
-    path("google-login/", google_login_view, name="google-login"),
-    path("verify/<uidb64>/<token>/", VerifyEmailView.as_view()),
 
-    # =========================
-    # PROFILE
-    # =========================
-    path(
-        "profile/",
-        account({
-            "get": "list",
-            "post": "create",
-        }),
-        name="profile",
-    ),
+# =========================
+# AUTH
+# =========================
+path("register/", register_view, name="register"),
+path("login/", login_view, name="login"),
+path("google-login/", google_login_view, name="google-login"),
 
-    path(
-        "profile/avatar/",
-        account({
-            "post": "avatar",
-        }),
-        name="profile-avatar",
-    ),
+# =========================
+# PROFILE
+# =========================
+path(
+    "profile/",
+    account({
+        "get": "list",
+        "post": "create",
+    }),
+    name="profile",
+),
 
-    # =====================================================
-    # 🔥 CLASSROOM SYSTEM
-    # =====================================================
+path(
+    "profile/avatar/",
+    account({
+        "post": "avatar",
+    }),
+    name="profile-avatar",
+),
 
-    # Teacher creates classroom
-    path(
-        "classroom/create/",
-        CreateClassroomView.as_view(),
-        name="create-classroom"
-    ),
+# =========================
+# CLASSROOM SYSTEM
+# =========================
 
-    # Student joins classroom by CODE (not pk)
-    path(
-        "classroom/join/",
-        JoinClassroomView.as_view(),
-        name="join-classroom"
-    ),
+path("classroom/create/", CreateClassroomView.as_view(), name="create-classroom"),
+path("classroom/join/", JoinClassroomView.as_view(), name="join-classroom"),
+path("classroom/my/", MyClassroomsView.as_view(), name="my-classrooms"),
+path("classroom/<int:pk>/", ClassroomDetailView.as_view(), name="classroom-detail"),
+path("classroom/<int:pk>/leave/", LeaveClassroomView.as_view(), name="leave-classroom"),
 
-    # List my classrooms (teacher or student)
-    path(
-        "classroom/my/",
-        MyClassroomsView.as_view(),
-        name="my-classrooms"
-    ),
+path("classroom/quizzes/", TeacherQuizzesView.as_view(), name="teacher-quizzes"),
+path("classroom/assign/", AssignQuizView.as_view(), name="assign-quiz"),
 
-    # Classroom detail (teacher only)
-    path(
-        "classroom/<int:pk>/",
-        ClassroomDetailView.as_view(),
-        name="classroom-detail"
-    ),
+path(
+    "classroom/<int:pk>/assignments/",
+    ClassroomAssignmentsView.as_view(),
+    name="classroom-assignments"
+),
 
-    # Leave classroom (student)
-    path(
-        "classroom/<int:pk>/leave/",
-        LeaveClassroomView.as_view(),
-        name="leave-classroom"
-    ),
-
-    path(
-        "classroom/<int:pk>/assign-quiz/",
-         AssignQuizView.as_view()),
-    path(
-        "classroom/<int:pk>/assignments/",
-         ClassroomAssignmentsView.as_view()
-    ),
-    path(
-        "classroom/quizzes/", 
-         TeacherQuizzesView.as_view()
-    ),
-    path(
-        "classroom/assign/", 
-         AssignQuizView.as_view()
-    ),
-    path(
-        "classroom/<int:pk>/assignments/",
-         ClassroomAssignmentsView.as_view()
-    ),
-    path(
-        "classroom/student-assignments/",
-        StudentAssignmentsView.as_view()
-    ),
+path(
+    "classroom/student-assignments/",
+    StudentAssignmentsView.as_view(),
+    name="student-assignments"
+),
 
 ]
