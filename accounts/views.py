@@ -113,8 +113,11 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.authtoken.models import Token
+from django.contrib.auth import get_user_model
 from .models import UserProfile
 import os
+
+User = get_user_model()
 
 
 @csrf_exempt
@@ -122,6 +125,7 @@ import os
 @permission_classes([AllowAny])
 def google_login_view(request):
     google_token = request.data.get("credential")
+    role = request.data.get("role", "student")  # 🔥 NEW
     CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 
     print("GOOGLE_CLIENT_ID:", CLIENT_ID)
@@ -150,7 +154,11 @@ def google_login_view(request):
         if not email or not email_verified:
             return Response({"error": "Email not verified by Google"}, status=401)
 
-        # 🔥 FIX: Handle existing inactive users
+        # Validate role safely
+        if role not in ["student", "teacher"]:
+            role = "student"
+
+        # Create or fetch user
         user, created = User.objects.get_or_create(
             email=email,
             defaults={
@@ -163,18 +171,19 @@ def google_login_view(request):
         if created:
             user.set_unusable_password()
         else:
-            # ✅ Force activate existing users
             if not user.is_active:
                 user.is_active = True
-
-            # Update name if empty
             if not user.first_name:
                 user.first_name = name
 
         user.save()
 
-        UserProfile.objects.get_or_create(user=user)
+        # 🔥 SET ROLE PROPERLY
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile.role = role
+        profile.save(update_fields=["role"])
 
+        # Generate fresh token
         Token.objects.filter(user=user).delete()
         token = Token.objects.create(user=user)
 
@@ -183,11 +192,15 @@ def google_login_view(request):
             "token": token.key,
             "email": email,
             "name": name,
+            "role": profile.role,
         })
 
     except ValueError as e:
         print("GOOGLE VERIFY ERROR:", e)
-        return Response({"error": "Invalid Google token", "details": str(e)}, status=401)
+        return Response(
+            {"error": "Invalid Google token", "details": str(e)},
+            status=401,
+        )
 
     except Exception as e:
         print("UNEXPECTED GOOGLE LOGIN ERROR:", e)
