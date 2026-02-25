@@ -1,5 +1,3 @@
-# core/settings.py
-
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -16,7 +14,11 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key")
 
 DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() in ("1", "true")
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",") if not DEBUG else ["*"]
+ALLOWED_HOSTS = (
+    os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",")
+    if not DEBUG
+    else ["*"]
+)
 
 # =====================================================
 # INSTALLED APPS
@@ -62,10 +64,9 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "core.urls"
 WSGI_APPLICATION = "core.wsgi.application"
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # =====================================================
-# TEMPLATES (FIXED – REQUIRED FOR ADMIN)
+# TEMPLATES
 # =====================================================
 TEMPLATES = [
     {
@@ -93,7 +94,6 @@ if DATABASE_URL:
         "default": dj_database_url.parse(DATABASE_URL)
     }
 else:
-    # Local fallback (so runserver doesn't crash)
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -129,7 +129,7 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # =====================================================
-# CORS (SAFE VERSION)
+# CORS
 # =====================================================
 CORS_ALLOWED_ORIGINS = [
     origin for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
@@ -143,6 +143,16 @@ from corsheaders.defaults import default_headers
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "authorization",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+# =====================================================
+# CSRF
+# =====================================================
+CSRF_TRUSTED_ORIGINS = [
+    origin for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origin
 ]
 
 # =====================================================
@@ -160,17 +170,11 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # =====================================================
-# PRODUCTION SECURITY SETTINGS
+# PRODUCTION SECURITY (IMPORTANT FOR RENDER)
 # =====================================================
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-
-CSRF_TRUSTED_ORIGINS = [
-    origin for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
-    if origin
-]
-
-
-CORS_ALLOW_CREDENTIALS = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    USE_X_FORWARDED_HOST = True
