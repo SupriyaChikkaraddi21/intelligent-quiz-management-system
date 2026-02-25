@@ -175,31 +175,29 @@ def google_login_view(request):
         email = info.get("email")
         name = info.get("name", "")
 
-        user = User.objects.filter(email=email).first()
-
-        if not user:
-            user = User.objects.create(
-                username=email,
-                email=email,
-                first_name=name,
-                is_active=True
-            )
-            user.set_unusable_password()
-            user.save()
-        UserProfile.objects.get_or_create(user=user)
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={
+                "username": email,
+                "first_name": name,
+                "is_active": True,
+            }
+        )
 
         if created:
             user.set_unusable_password()
             user.save()
-            UserProfile.objects.get_or_create(user=user)
+
+        UserProfile.objects.get_or_create(user=user)
 
         Token.objects.filter(user=user).delete()
         token = Token.objects.create(user=user)
+
         return Response({"success": True, "token": token.key})
 
-    except Exception:
-        return Response({"error": "Google login failed"}, status=401)
-
+    except Exception as e:
+        print("GOOGLE AUTH ERROR:", e)
+        return Response({"error": str(e)}, status=401)
 
 # ==============================================================
 # PROFILE VIEWSET
