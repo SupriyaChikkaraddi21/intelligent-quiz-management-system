@@ -196,7 +196,7 @@ def google_login_view(request):
         return Response({"success": True, "token": token.key})
 
     except Exception as e:
-        print("GOOGLE AUTH ERROR:", e)
+        print("GOOGLE VERIFY ERROR:", e)
         return Response({"error": str(e)}, status=401)
 
 # ==============================================================
