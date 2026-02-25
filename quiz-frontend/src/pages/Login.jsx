@@ -17,11 +17,12 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/dashboard");
-    }
+    if (isAuthenticated) navigate("/dashboard");
   }, [isAuthenticated, navigate]);
 
+  // =========================
+  // EMAIL LOGIN
+  // =========================
   async function handleLogin(e) {
     e.preventDefault();
     setError("");
@@ -33,21 +34,25 @@ export default function Login() {
         password,
       });
 
-      await login(res.data.token);
-      setTimeout(() => {navigate("/dashboard");},100);
+      const token = res.data.token;
 
+      // ✅ save token
+      localStorage.setItem("token", token);
+
+      // ✅ fetch profile WITH header (prevents race)
+      const profileRes = await api.get("/accounts/profile/", {
+        headers: { Authorization: `Token ${token}` },
+      });
+
+      login(token, profileRes.data);
+
+      navigate("/dashboard");
     } catch (err) {
       if (err.response) {
         const status = err.response.status;
-        const backendMessage = err.response.data?.error;
-
-        if (status === 403) {
-          setError("Please verify your email before logging in.");
-        } else if (status === 401) {
-          setError("Invalid email or password.");
-        } else {
-          setError(backendMessage || "Login failed.");
-        }
+        if (status === 403) setError("Please verify your email.");
+        else if (status === 401) setError("Invalid email or password.");
+        else setError("Login failed.");
       } else {
         setError("Server not reachable.");
       }
@@ -56,27 +61,31 @@ export default function Login() {
     }
   }
 
+  // =========================
+  // GOOGLE LOGIN
+  // =========================
   async function handleGoogleLogin(cred) {
     setError("");
     setLoading(true);
+
     try {
       const res = await api.post("/accounts/google-login/", {
         credential: cred.credential,
       });
 
       const token = res.data.token;
-
       if (!token) throw new Error("Token missing");
 
-      // ✅ save token
+      // ✅ store token
       localStorage.setItem("token", token);
-  api.defaults.headers.common["Authorization"] = `Token ${token}`;
 
-    // ✅ fetch profile manually
-      const profileRes = await api.get("/accounts/profile/");
+      // ✅ fetch profile WITH HEADER (critical fix)
+      const profileRes = await api.get("/accounts/profile/", {
+        headers: { Authorization: `Token ${token}` },
+      });
 
-    // ✅ pass user directly (stops race condition)
-      await login(token, profileRes.data);
+      // ✅ update auth context
+      login(token, profileRes.data);
 
       navigate("/dashboard");
     } catch (err) {
@@ -86,11 +95,11 @@ export default function Login() {
       setLoading(false);
     }
   }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-slate-50 via-sky-50 to-sky-100">
       <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-[0_40px_80px_rgba(0,0,0,0.12)] p-8">
-        
-        {/* BRAND */}
+
         <div className="text-center mb-6">
           <h1 className="text-2xl font-extrabold tracking-tight">
             Quiz<span className="text-sky-500">Gen</span>
@@ -105,7 +114,6 @@ export default function Login() {
           Sign in to continue learning smarter
         </p>
 
-        {/* ERROR */}
         {error && (
           <div className="mb-5 rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-700">
             {error}
@@ -117,7 +125,7 @@ export default function Login() {
           <input
             type="email"
             placeholder="Email address"
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400 outline-none transition"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400 outline-none"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -127,7 +135,7 @@ export default function Login() {
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Password"
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 pr-11 text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400 outline-none transition"
+              className="w-full rounded-xl border border-slate-300 px-4 py-3 pr-11 text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400 outline-none"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -136,7 +144,7 @@ export default function Login() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-sky-500 transition"
+              className="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-sky-500"
             >
               {showPassword ? (
                 <EyeSlashIcon className="h-5 w-5" />
@@ -146,18 +154,9 @@ export default function Login() {
             </button>
           </div>
 
-          <div className="flex justify-end text-sm">
-            <Link
-              to="/forgot-password"
-              className="text-sky-500 hover:underline font-medium"
-            >
-              Forgot password?
-            </Link>
-          </div>
-
           <button
             disabled={loading}
-            className="w-full rounded-xl bg-sky-500 py-3 font-semibold text-white hover:bg-sky-600 transition disabled:opacity-60"
+            className="w-full rounded-xl bg-sky-500 py-3 font-semibold text-white hover:bg-sky-600 disabled:opacity-60"
           >
             {loading ? "Signing in..." : "Sign in"}
           </button>
@@ -171,19 +170,16 @@ export default function Login() {
 
         <div className="flex justify-center">
           <GoogleLogin
-          onSuccess={handleGoogleLogin}
-          onError={() => setError("Google login failed")}
-          auto_select={false}
-          useOneTap={false}
+            onSuccess={handleGoogleLogin}
+            onError={() => setError("Google login failed")}
+            auto_select={false}
+            useOneTap={false}
           />
         </div>
 
         <p className="text-center text-sm text-slate-600 mt-8">
           New here?{" "}
-          <Link
-            to="/register"
-            className="font-medium text-sky-500 hover:underline"
-          >
+          <Link to="/register" className="font-medium text-sky-500 hover:underline">
             Create an account
           </Link>
         </p>

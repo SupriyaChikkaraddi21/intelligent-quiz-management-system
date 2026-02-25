@@ -6,26 +6,40 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(false); // prevent duplicate calls
+
+  // =============================
+  // ATTACH TOKEN HEADER SAFELY
+  // =============================
+  const setAuthHeader = (token) => {
+    if (token) {
+      api.defaults.headers.common["Authorization"] = `Token ${token}`;
+    } else {
+      delete api.defaults.headers.common["Authorization"];
+    }
+  };
 
   // =============================
   // FETCH CURRENT USER
   // =============================
   const fetchUser = useCallback(async () => {
+    if (fetching) return; // prevent parallel calls
+    setFetching(true);
+
     try {
       const res = await api.get("/accounts/profile/");
       setUser(res.data);
     } catch (error) {
       console.error("Auth error:", error?.response?.status);
 
-      // ❗ Do NOT remove token here
-      // 401 may happen during login race
       if (error.response?.status === 401) {
         setUser(null);
       }
     } finally {
       setLoading(false);
+      setFetching(false);
     }
-  }, []);
+  }, [fetching]);
 
   // =============================
   // LOGIN
@@ -33,20 +47,18 @@ export function AuthProvider({ children }) {
   const login = async (token, userData = null) => {
     if (!token) return;
 
-    // save token
     localStorage.setItem("token", token);
 
-    // attach token globally
-    api.defaults.headers.common["Authorization"] = `Token ${token}`;
+    // attach header BEFORE anything else
+    setAuthHeader(token);
 
-    // if profile already fetched → avoid extra call
+    // if user already fetched (Google login flow)
     if (userData) {
       setUser(userData);
       setLoading(false);
       return;
     }
 
-    // otherwise fetch profile once
     await fetchUser();
   };
 
@@ -55,12 +67,12 @@ export function AuthProvider({ children }) {
   // =============================
   const logout = () => {
     localStorage.removeItem("token");
-    delete api.defaults.headers.common["Authorization"];
+    setAuthHeader(null);
     setUser(null);
   };
 
   // =============================
-  // RESTORE SESSION ON REFRESH
+  // RESTORE SESSION
   // =============================
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -71,7 +83,7 @@ export function AuthProvider({ children }) {
     }
 
     // attach header BEFORE fetching
-    api.defaults.headers.common["Authorization"] = `Token ${token}`;
+    setAuthHeader(token);
 
     fetchUser();
   }, [fetchUser]);
