@@ -17,7 +17,7 @@ export default function MyQuizzes() {
     async function load() {
       try {
         // ✅ FIXED ENDPOINT
-        const res = await api.get("/quiz-management/my_quizzes/");
+        const res = await api.get("/quiz-management/");
         setQuizzes(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error(err);
