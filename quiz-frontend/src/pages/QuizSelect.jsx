@@ -35,7 +35,7 @@ export default function QuizSelect() {
           api.get("/category-groups/"),
           api.get("/categories/"),
           api.get("/subcategories/"),
-          api.get("/quiz/my_quizzes/").catch(() => ({ data: [] })),
+          api.get("/quiz-management/my_quizzes/").catch(() => ({ data: [] })),
           api.get("/user/difficulty/").catch(() => ({ data: null })),
         ]);
 
