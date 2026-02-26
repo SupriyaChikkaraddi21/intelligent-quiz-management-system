@@ -1,73 +1,107 @@
-🚀 Intelligent Quiz Management System
+# Intelligent Quiz Management System
 
-AI-powered quiz generation platform with classroom management, analytics, and gamification.
+A full-stack AI-powered quiz platform with role-based access control, classroom management, gamification, and analytics.
 
+🔗 Live Demo: https://intelligent-quiz-management-system.vercel.app  
+🔗 Backend API: https://intelligent-quiz-management-system.onrender.com  
 
-🔥 Features
+---
 
-AI-generated quizzes
-Challenge & Practice modes
-Classroom system (Teacher & Student roles)
-Leaderboard & gamification
-Email verification system
-Google OAuth login
-Analytics tracking
-PostgreSQL database
+## 🚀 Features
 
+### 🔐 Authentication
+- Email & Password Registration
+- Google OAuth Login
+- Token-based Authentication (DRF)
+- Role-based Access (Student / Teacher)
 
-🏗 Tech Stack
+### 👨‍🎓 Student Features
+- Take AI-generated quizzes
+- View quiz history
+- Track performance analytics
+- Earn reward points
+- Join classrooms using code
+
+### 👩‍🏫 Teacher Features
+- Create and manage quizzes
+- Manage classrooms
+- Assign quizzes
+- Track student activity
+
+### 📊 Analytics
+- Performance dashboard
+- Difficulty recommendation
+- Progress tracking
+
+### 🎮 Gamification
+- Reward points system
+- Unlockable modes
+- Daily streak tracking
+
+---
+
+## 🛠 Tech Stack
+
+### Frontend
+- React (Vite)
+- Tailwind CSS
+- React Router
+- Axios
+- Google OAuth
+
+### Backend
+- Django
+- Django REST Framework
+- Token Authentication
+- PostgreSQL
+- Google OAuth Verification
+
+### Deployment
+- Frontend: Vercel
+- Backend: Render
+- Database: PostgreSQL (Render)
+
+---
+
+## 🏗 Architecture Overview
+
+Frontend (React)  
+⬇  
+REST API (Django DRF)  
+⬇  
+PostgreSQL Database  
+
+Authentication Flow:
+1. User logs in
+2. Token generated
+3. Token stored in frontend
+4. All API requests use token
+
+---
+
+## 📂 Project Structure
 
 Backend:
-Django
-Django REST Framework
-PostgreSQL
+- accounts/ → Authentication & Roles
+- quiz/ → Quiz logic & attempts
+- classroom/ → Classroom management
+- gamification/ → Rewards system
+- leaderboard/ → Ranking system
 
 Frontend:
-React (Vite)
-TailwindCSS
+- pages/ → UI pages
+- api/ → Axios configuration
+- components/ → Reusable UI components
 
-Authentication:
-Token Authentication
-Google OAuth
+---
 
-Email Verification (SMTP)
-⚙️ Setup Instructions
-1️⃣ Clone repo
-git clone <https://github.com/SupriyaChikkaraddi21/intelligent-quiz-management-system.git>
+## ⚙️ Installation (Local Setup)
+
+### Backend
+
+```bash
+git clone <repo-url>
 cd intelligent-quiz-management-system
-Axios
-
-Recharts
-
-📦 Installation & Setup
-🔧 Backend Setup (Django)
-1. Clone the repo
-git clone https://github.com/SupriyaChikkaraddi21/intelligent-quiz-management-system.git
-cd quizgen
-
-2. Create Virtual Environment
-python -m venv .venv
-
-
-2️⃣ Create virtual environment
-python -m venv venv
-venv\Scripts\activate
-
-3️⃣ Install dependencies
 pip install -r requirements.txt
-
-4️⃣ Configure environment
-cp .env.example .env
-Fill credentials.
-
-5️⃣ Run migrations
 python manage.py migrate
-
-6️⃣ Start backend
 python manage.py runserver
-
-7️⃣ Start frontend
-cd quiz-frontend
-npm install
-npm run dev
-
