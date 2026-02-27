@@ -1,12 +1,10 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useState } from "react";
 
 const commonLinks = [
   { name: "Dashboard", to: "/dashboard" },
-
-  // 🔥 AI Quiz Generation
   { name: "AI Quiz", to: "/select" },
-
   { name: "History", to: "/history" },
   { name: "Leaderboard", to: "/leaderboard" },
   { name: "Rewards", to: "/rewards" },
@@ -28,9 +26,9 @@ const adminLinks = [
 
 export default function Sidebar() {
   const { user } = useAuth();
+  const [open, setOpen] = useState(false);
 
   const token = localStorage.getItem("token");
-
   if (!token) return null;
 
   const role = user?.role;
@@ -46,87 +44,113 @@ export default function Sidebar() {
     }`;
 
   return (
-    <aside className="w-64 shrink-0 min-h-screen bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-r border-white/10 px-4 py-6">
-      <nav className="space-y-1">
+    <>
+      {/* ===== Mobile Hamburger Button ===== */}
+      <button
+        onClick={() => setOpen(true)}
+        className="md:hidden fixed top-4 left-4 z-50 bg-slate-800 text-white p-2 rounded-lg"
+      >
+        ☰
+      </button>
 
-        {/* ================= COMMON LINKS ================= */}
-        {commonLinks.map((link) => (
-          <NavLink
-            key={link.to}
-            to={link.to}
-            className={({ isActive }) => linkStyle(isActive)}
-          >
-            {link.name}
-          </NavLink>
-        ))}
+      {/* ===== Overlay (Mobile) ===== */}
+      {open && (
+        <div
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+        />
+      )}
 
-        {/* ================= MANUAL QUIZ (TEACHER ONLY) ================= */}
-        {role === "teacher" && (
-          <div className="mt-2">
+      {/* ===== Sidebar ===== */}
+      <aside
+        className={`
+          fixed inset-y-0 left-0 w-64 z-50
+          bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950
+          border-r border-white/10 px-4 py-6
+          transform ${open ? "translate-x-0" : "-translate-x-full"}
+          transition-transform duration-300
+          md:static md:translate-x-0 md:flex md:shrink-0
+        `}
+      >
+        <nav className="space-y-1 flex-1 overflow-y-auto">
+
+          {commonLinks.map((link) => (
             <NavLink
-              to="/create-quiz"
+              key={link.to}
+              to={link.to}
+              onClick={() => setOpen(false)}
               className={({ isActive }) => linkStyle(isActive)}
             >
-              🛠 Manual Quiz
+              {link.name}
+            </NavLink>
+          ))}
+
+          {role === "teacher" && (
+            <div className="mt-2">
+              <NavLink
+                to="/create-quiz"
+                onClick={() => setOpen(false)}
+                className={({ isActive }) => linkStyle(isActive)}
+              >
+                🛠 Manual Quiz
+              </NavLink>
+            </div>
+          )}
+
+          <div className="mt-4">
+            <NavLink
+              to={classroomLink.to}
+              onClick={() => setOpen(false)}
+              className={({ isActive }) => linkStyle(isActive)}
+            >
+              🎓 {classroomLink.name}
             </NavLink>
           </div>
-        )}
 
-        {/* ================= CLASSROOM ================= */}
-        <div className="mt-4">
-          <NavLink
-            to={classroomLink.to}
-            className={({ isActive }) => linkStyle(isActive)}
-          >
-            🎓 {classroomLink.name}
-          </NavLink>
-        </div>
-
-        {/* ================= TEACHER LABEL ================= */}
-        {role === "teacher" && (
-          <div className="mt-6 px-4 text-xs font-semibold text-emerald-400 uppercase tracking-wider">
-            Teacher Mode Active
-          </div>
-        )}
-
-        {/* ================= ADMIN SECTION ================= */}
-        {role === "admin" && (
-          <>
-            <div className="mt-6 mb-2 px-4 text-xs font-semibold text-purple-400 uppercase tracking-wider">
-              Admin
+          {role === "teacher" && (
+            <div className="mt-6 px-4 text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+              Teacher Mode Active
             </div>
+          )}
 
-            {adminLinks.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                className={({ isActive }) =>
-                  `${baseStyle} ${
-                    isActive
-                      ? "bg-purple-500/20 text-purple-300 shadow-inner"
-                      : "text-slate-400 hover:text-purple-300 hover:bg-purple-500/10"
-                  }`
-                }
-              >
-                {link.name}
-              </NavLink>
-            ))}
-          </>
-        )}
-      </nav>
+          {role === "admin" && (
+            <>
+              <div className="mt-6 mb-2 px-4 text-xs font-semibold text-purple-400 uppercase tracking-wider">
+                Admin
+              </div>
 
-      {/* ================= LOGOUT ================= */}
-      <div className="mt-10 px-4">
-        <button
-          onClick={() => {
-            localStorage.removeItem("token");
-            window.location.href = "/login";
-          }}
-          className="w-full py-2 rounded-xl text-sm bg-white/5 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition"
-        >
-          Logout
-        </button>
-      </div>
-    </aside>
+              {adminLinks.map((link) => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) =>
+                    `${baseStyle} ${
+                      isActive
+                        ? "bg-purple-500/20 text-purple-300 shadow-inner"
+                        : "text-slate-400 hover:text-purple-300 hover:bg-purple-500/10"
+                    }`
+                  }
+                >
+                  {link.name}
+                </NavLink>
+              ))}
+            </>
+          )}
+        </nav>
+
+        <div className="mt-10 px-4">
+          <button
+            onClick={() => {
+              localStorage.removeItem("token");
+              window.location.href = "/login";
+            }}
+            className="w-full py-2 rounded-xl text-sm bg-white/5 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition"
+          >
+            Logout
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }
