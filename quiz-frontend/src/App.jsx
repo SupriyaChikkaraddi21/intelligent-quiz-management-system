@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 
@@ -40,6 +40,7 @@ import Sidebar from "./components/Sidebar";
 export default function App() {
   const location = useLocation();
   const { loading } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (loading) return null;
 
@@ -79,15 +80,24 @@ export default function App() {
       {/* ================= PROTECTED APP ================= */}
       {!isLandingPage && !isAuthPage && (
         <div className="min-h-screen text-slate-900">
-          <Navbar />
+          
+          {/* Navbar now controls sidebar */}
+          <Navbar
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+          />
 
           <div className="flex h-[calc(100vh-64px)]">
-            <Sidebar />
+            
+            {/* Sidebar now controlled by App */}
+            <Sidebar
+              open={sidebarOpen}
+              setOpen={setSidebarOpen}
+            />
 
             <main className="flex-1 overflow-y-auto">
               <Routes>
 
-                {/* ================= DASHBOARD ================= */}
                 <Route
                   path="/dashboard"
                   element={
@@ -97,9 +107,7 @@ export default function App() {
                   }
                 />
 
-                {/* ================= CREATE QUIZ FLOW (NEW CLEAN STRUCTURE) ================= */}
-
-                {/* Mode selection page */}
+                {/* CREATE QUIZ FLOW */}
                 <Route
                   path="/create"
                   element={
@@ -109,7 +117,6 @@ export default function App() {
                   }
                 />
 
-                {/* Manual builder (NEW CLEAN URL) */}
                 <Route
                   path="/create/manual"
                   element={
@@ -119,7 +126,6 @@ export default function App() {
                   }
                 />
 
-                {/* AI builder (NEW CLEAN URL) */}
                 <Route
                   path="/create/ai"
                   element={
@@ -129,8 +135,7 @@ export default function App() {
                   }
                 />
 
-                {/* ================= OLD ROUTES (KEPT FOR BACKWARD COMPATIBILITY) ================= */}
-
+                {/* OLD ROUTES */}
                 <Route
                   path="/create-quiz"
                   element={
@@ -167,8 +172,7 @@ export default function App() {
                   }
                 />
 
-                {/* ================= TEACHER ================= */}
-
+                {/* TEACHER */}
                 <Route
                   path="/classrooms"
                   element={
@@ -196,8 +200,7 @@ export default function App() {
                   }
                 />
 
-                {/* ================= QUIZ FLOW ================= */}
-
+                {/* QUIZ FLOW */}
                 <Route
                   path="/attempt/:attemptId"
                   element={
@@ -216,8 +219,7 @@ export default function App() {
                   }
                 />
 
-                {/* ================= OTHER ================= */}
-
+                {/* OTHER */}
                 <Route
                   path="/history"
                   element={

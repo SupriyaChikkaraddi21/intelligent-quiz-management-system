@@ -4,6 +4,7 @@ from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from rest_framework import serializers
+from django.conf import settings
 
 User = get_user_model()
 
@@ -21,12 +22,15 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
             reset_link = f"http://localhost:5173/reset-password/{uid}/{token}/"
 
+           
+
             send_mail(
                 subject="Reset Your Password",
                 message=f"Click the link to reset password:\n{reset_link}",
-                from_email=None,
-                recipient_list=[email],
-            )
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[user.email],
+                fail_silently=False,
+                )
 
         return {"message": "If account exists, reset link sent."}
 

@@ -44,20 +44,29 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4">
-      <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md space-y-6">
-        <h2 className="text-2xl font-bold text-slate-800 text-center">
+    <div className="min-h-screen flex items-center justify-center
+                    bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4">
+
+      <div className="relative w-full max-w-md p-8 rounded-3xl
+                      bg-white/5 backdrop-blur-xl
+                      border border-white/10 shadow-2xl">
+
+        <h2 className="text-3xl font-bold text-white text-center mb-6">
           Reset Password
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+
           <input
             type="password"
             required
             placeholder="New password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-sky-500"
+            className="w-full p-3 rounded-xl
+                       bg-white/10 text-white placeholder-slate-400
+                       border border-white/20
+                       focus:outline-none focus:ring-2 focus:ring-sky-500"
           />
 
           <input
@@ -66,25 +75,37 @@ export default function ResetPassword() {
             placeholder="Confirm password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            className="w-full p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-sky-500"
+            className="w-full p-3 rounded-xl
+                       bg-white/10 text-white placeholder-slate-400
+                       border border-white/20
+                       focus:outline-none focus:ring-2 focus:ring-sky-500"
           />
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl bg-sky-600 text-white font-semibold hover:bg-sky-700 transition"
+            className="w-full py-3 rounded-xl
+                       bg-sky-500 text-white font-semibold
+                       hover:bg-sky-600
+                       transition-all duration-200
+                       shadow-lg shadow-sky-500/30"
           >
             {loading ? "Resetting..." : "Reset Password"}
           </button>
         </form>
 
         {message && (
-          <div className="text-green-600 text-sm text-center">{message}</div>
+          <div className="text-green-400 text-sm text-center mt-4">
+            {message}
+          </div>
         )}
 
         {error && (
-          <div className="text-red-600 text-sm text-center">{error}</div>
+          <div className="text-red-400 text-sm text-center mt-4">
+            {error}
+          </div>
         )}
+
       </div>
     </div>
   );

@@ -38,9 +38,7 @@ export default function Login() {
       const token = res.data.token;
       if (!token) throw new Error("Token missing");
 
-      // ✅ ONLY call context login
       await login(token);
-
       navigate("/dashboard");
     } catch (err) {
       if (err.response) {
@@ -71,9 +69,7 @@ export default function Login() {
       const token = res.data.token;
       if (!token) throw new Error("Token missing");
 
-      // ✅ ONLY login through context
       await login(token);
-
       navigate("/dashboard");
     } catch (err) {
       console.error(err);
@@ -87,6 +83,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-slate-50 via-sky-50 to-sky-100">
       <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-[0_40px_80px_rgba(0,0,0,0.12)] p-8">
 
+        {/* Brand */}
         <div className="text-center mb-6">
           <h1 className="text-2xl font-extrabold tracking-tight">
             Quiz<span className="text-sky-500">Gen</span>
@@ -109,6 +106,7 @@ export default function Login() {
 
         <form onSubmit={handleLogin} className="space-y-4">
 
+          {/* Email */}
           <input
             type="email"
             placeholder="Email address"
@@ -118,6 +116,7 @@ export default function Login() {
             required
           />
 
+          {/* Password */}
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
@@ -141,20 +140,34 @@ export default function Login() {
             </button>
           </div>
 
+          {/* Forgot Password */}
+          <div className="text-right">
+            <button
+              type="button"
+              onClick={() => navigate("/forgot-password")}
+              className="text-sm text-sky-600 hover:text-sky-700 hover:underline transition"
+            >
+              Forgot password?
+            </button>
+          </div>
+
+          {/* Submit */}
           <button
             disabled={loading}
-            className="w-full rounded-xl bg-sky-500 py-3 font-semibold text-white hover:bg-sky-600 disabled:opacity-60"
+            className="w-full rounded-xl bg-sky-500 py-3 font-semibold text-white hover:bg-sky-600 disabled:opacity-60 transition"
           >
             {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
 
+        {/* Divider */}
         <div className="my-7 flex items-center">
           <div className="flex-1 h-px bg-slate-200" />
           <span className="px-3 text-xs text-slate-500">OR</span>
           <div className="flex-1 h-px bg-slate-200" />
         </div>
 
+        {/* Google */}
         <div className="flex justify-center">
           <GoogleLogin
             onSuccess={handleGoogleLogin}
@@ -164,12 +177,14 @@ export default function Login() {
           />
         </div>
 
+        {/* Register */}
         <p className="text-center text-sm text-slate-600 mt-8">
           New here?{" "}
           <Link to="/register" className="font-medium text-sky-500 hover:underline">
             Create an account
           </Link>
         </p>
+
       </div>
     </div>
   );

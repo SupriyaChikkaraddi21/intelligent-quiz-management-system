@@ -29,51 +29,71 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4">
-      <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md space-y-6">
-        <h2 className="text-2xl font-bold text-slate-800 text-center">
+    <div className="min-h-screen flex items-center justify-center px-4
+                    bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+
+      <div className="w-full max-w-md p-8 rounded-3xl
+                      bg-white/5 backdrop-blur-xl
+                      border border-white/10
+                      shadow-2xl">
+
+        <h2 className="text-3xl font-bold text-white text-center mb-3">
           Forgot Password
         </h2>
 
-        <p className="text-sm text-slate-500 text-center">
+        <p className="text-sm text-slate-300 text-center mb-8">
           Enter your email and we’ll send you a reset link.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+
           <input
             type="email"
             required
             placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-sky-500"
+            className="w-full p-3 rounded-xl
+                       bg-white/10 text-white placeholder-slate-400
+                       border border-white/20
+                       focus:outline-none focus:ring-2 focus:ring-sky-500"
           />
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl bg-sky-600 text-white font-semibold hover:bg-sky-700 transition"
+            className="w-full py-3 rounded-xl
+                       bg-sky-500 text-white font-semibold
+                       hover:bg-sky-600
+                       transition-all duration-200
+                       shadow-lg shadow-sky-500/30
+                       disabled:opacity-60"
           >
             {loading ? "Sending..." : "Send Reset Link"}
           </button>
         </form>
 
         {message && (
-          <div className="text-green-600 text-sm text-center">{message}</div>
+          <div className="text-green-400 text-sm text-center mt-4">
+            {message}
+          </div>
         )}
 
         {error && (
-          <div className="text-red-600 text-sm text-center">{error}</div>
+          <div className="text-red-400 text-sm text-center mt-4">
+            {error}
+          </div>
         )}
 
-        <div className="text-center">
+        <div className="text-center mt-6">
           <button
             onClick={() => navigate("/login")}
-            className="text-sm text-sky-600 hover:underline"
+            className="text-sm text-sky-400 hover:text-sky-300 hover:underline transition"
           >
             Back to Login
           </button>
         </div>
+
       </div>
     </div>
   );

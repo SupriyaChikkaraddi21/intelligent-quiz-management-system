@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 
 from ..serializers.password_reset_serializers import (
     PasswordResetRequestSerializer,
@@ -9,6 +10,9 @@ from ..serializers.password_reset_serializers import (
 
 
 class PasswordResetRequestView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
     def post(self, request):
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -20,6 +24,9 @@ class PasswordResetRequestView(APIView):
 
 
 class PasswordResetConfirmView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
     def post(self, request):
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
