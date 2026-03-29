@@ -57,27 +57,37 @@ export default function Login() {
   // =========================
   // GOOGLE LOGIN
   // =========================
-  async function handleGoogleLogin(cred) {
-    setError("");
+  async function handleGoogleLogin(response) {
+  console.log("FULL GOOGLE RESPONSE:", response);
+
+  if (!response || !response.credential) {
+    console.log("No credential received");
+    setError("Google login failed");
+    return;
+  }
+
+  try {
     setLoading(true);
 
-    try {
-      const res = await api.post("/accounts/google-login/", {
-        credential: cred.credential,
-      });
+    const res = await api.post("/accounts/google-login/", {
+      credential: response.credential,
+    });
 
-      const token = res.data.token;
-      if (!token) throw new Error("Token missing");
+    console.log("BACKEND RESPONSE:", res.data);
 
-      await login(token);
-      navigate("/dashboard");
-    } catch (err) {
-      console.error(err);
-      setError("Google login failed");
-    } finally {
-      setLoading(false);
-    }
+    const token = res.data.token;
+    if (!token) throw new Error("Token missing");
+
+    await login(token);
+    navigate("/dashboard");
+
+  } catch (err) {
+    console.error("API ERROR:", err);
+    setError("Google login failed");
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-slate-50 via-sky-50 to-sky-100">
@@ -170,11 +180,15 @@ export default function Login() {
         {/* Google */}
         <div className="flex justify-center">
           <GoogleLogin
-            onSuccess={handleGoogleLogin}
-            onError={() => setError("Google login failed")}
-            auto_select={false}
-            useOneTap={false}
-          />
+            onSuccess={(res) => {
+              console.log("SUCCESS TRIGGERED");
+              handleGoogleLogin(res);
+            }}
+            onError={(err) => {
+              console.log("GOOGLE ERROR:", err);
+              setError("Google login failed");
+            }}
+            />
         </div>
 
         {/* Register */}
