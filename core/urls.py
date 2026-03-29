@@ -4,8 +4,16 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import JsonResponse  # ✅ added
+
+# ✅ health check for Render
+def health_check(request):
+    return JsonResponse({"status": "ok"})
 
 urlpatterns = [
+    # ✅ REQUIRED for Render (DO NOT REMOVE)
+    path("", health_check),
+
     # ================= ADMIN =================
     path("admin/", admin.site.urls),
 
@@ -25,7 +33,6 @@ urlpatterns = [
     # Classroom App
     path("api/v1/", include("classroom.urls")),
 ]
-
 
 # ================= MEDIA FILES =================
 if settings.DEBUG:
