@@ -87,6 +87,9 @@ TEMPLATES = [
 # =====================================================
 # DATABASE
 # =====================================================
+import os
+import dj_database_url
+
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
@@ -95,8 +98,14 @@ if DATABASE_URL:
             DATABASE_URL,
             conn_max_age=600,
             ssl_require=True
-            )
+        )
     }
+
+    # 🔥 FORCE SSL (THIS FIXES YOUR ERROR)
+    DATABASES["default"]["OPTIONS"] = {
+        "sslmode": "require"
+    }
+
 else:
     DATABASES = {
         "default": {
