@@ -6,6 +6,28 @@ A full-stack AI-powered quiz platform with role-based access control, classroom 
 🔗 Backend API: https://intelligent-quiz-management-system.onrender.com  
 
 ---
+## 📸 Screenshots
+
+### 🏠 Landing Page
+![Landing Page](./screenshots/landing.png)
+
+### 📊 Dashboard
+![Dashboard](./screenshots/dashboard.png)
+
+### 🧠 Create Quiz (AI Powered)
+![Create Quiz](./screenshots/createquiz.png)
+
+### 🏫 Classroom Management
+![Classroom](./screenshots/classroom.png)
+
+### 📈 Analytics
+![Analytics](./screenshots/analytics.png)
+
+### 📉 Progress Tracking
+![Progress](./screenshots/progress.png)
+
+### 🔐 Authentication (Register/Login)
+![Register](./screenshots/register.png)
 
 ## 🚀 Features
 
