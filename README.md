@@ -173,7 +173,7 @@ Admin dashboard improvements
 
 👩‍💻 Author
 
-Supriya Chikkaraddi
+Supriya Chikkaraddi,
 Computer Science Engineering Student
 
 © 2026 Supriya Chikkaraddi. All rights reserved.
