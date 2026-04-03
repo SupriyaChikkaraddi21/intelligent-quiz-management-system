@@ -172,6 +172,7 @@ AI performance tuning
 Admin dashboard improvements
 
 👩‍💻 Author
+
 Supriya Chikkaraddi
 Computer Science Engineering Student
 
