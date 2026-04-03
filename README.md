@@ -12,17 +12,26 @@ https://intelligent-quiz-management-system.onrender.com
 ---
 ## 📸 Screenshots
 
-| Landing | Dashboard |
-|--------|----------|
-| ![](./screenshots/landing.png) | ![](./screenshots/dashboard.png) |
+### 🏠 Landing Page
+![Landing Page](./screenshots/landing.png)
 
-| Create Quiz | Classroom |
-|------------|----------|
-| ![](./screenshots/createquiz.png) | ![](./screenshots/classroom.png) |
+### 📊 Dashboard
+![Dashboard](./screenshots/dashboard.png)
 
-| Analytics | Progress |
-|----------|---------|
-| ![](./screenshots/analytics.png) | ![](./screenshots/progress.png) |
+### 🧠 Create Quiz (AI Powered)
+![Create Quiz](./screenshots/createquiz.png)
+
+### 🏫 Classroom Management
+![Classroom](./screenshots/classroom.png)
+
+### 📈 Analytics
+![Analytics](./screenshots/analytics.png)
+
+### 📉 Progress Tracking
+![Progress](./screenshots/progress.png)
+
+### 🔐 Authentication (Register/Login)
+![Register](./screenshots/register.png)
 ## Overview
 
 Intelligent Quiz Management System is a role-based AI-driven learning platform that enables dynamic quiz generation, classroom workflows, performance analytics, and gamified engagement.
