@@ -12,8 +12,6 @@ https://intelligent-quiz-management-system.onrender.com
 ---
 
 ## 📸 Screenshots
-## 📸 Screenshots
-
 ### 🏠 Landing Page
 ![Landing Page](landing.png)
 
